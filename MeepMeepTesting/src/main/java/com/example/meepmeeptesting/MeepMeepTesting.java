@@ -23,9 +23,15 @@ public class MeepMeepTesting {
 
                 // 3. TRAJETÓRIA DO ROBÔ
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(0, 50, 0))
-                        .forward(30)
+                        .forward(5)
                         .turn(Math.toRadians(-90))
-                        .forward(70)
+                        .forward(90)
+                        .turn(Math.toRadians(-180))
+                        .waitSeconds(5)
+                        .turn(Math.toRadians(-90))
+                        .forward(25)
+                        .turn(Math.toRadians(90))
+                        .forward(20)
                         .build());
 
         // Carregar a imagem personalizada da arena BioBuzz
