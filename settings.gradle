@@ -3,9 +3,10 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven { url 'https://jitpack.io' }
+        maven { url 'https://maven.brott.dev/' }
     }
 }
-
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
@@ -16,6 +17,7 @@ dependencyResolutionManagement {
     }
 }
 
+rootProject.name = "FtcRobotController"
 include ':FtcRobotController'
 include ':TeamCode'
 include ':MeepMeepTesting'

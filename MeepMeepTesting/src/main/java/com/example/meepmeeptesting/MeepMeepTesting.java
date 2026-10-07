@@ -1,9 +1,9 @@
 package com.example.meepmeeptesting;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import org.rowlandhall.meepmeep.MeepMeep;
-import org.rowlandhall.meepmeep.roadrunner.DefaultBotBuilder;
-import org.rowlandhall.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
+import com.noahbres.meepmeep.MeepMeep;
+import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
+import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -17,10 +17,8 @@ public class MeepMeepTesting {
         RoadRunnerBotEntity myBot = new DefaultBotBuilder(meepMeep)
                 // 1. TAMANHO DO ROBÔ em polegadas: (largura, comprimento)
                 .setDimensions(16.7717, 17.7953)
-
                 // 2. RESTRIÇÕES DE MOVIMENTO: (maxVel, maxAccel, maxAngVel, maxAngAccel, trackWidth)
                 .setConstraints(60, 60, Math.toRadians(180), Math.toRadians(180), 15)
-
                 // 3. TRAJETÓRIA DO ROBÔ
                 .followTrajectorySequence(drive -> drive.trajectorySequenceBuilder(new Pose2d(0, 50, 0))
                         .forward(5)
@@ -37,11 +35,12 @@ public class MeepMeepTesting {
         // Carregar a imagem personalizada da arena BioBuzz
         try {
             File imageFile = new File("MeepMeepTesting/biobuzz_field.png");
-            BufferedImage fieldImage = ImageIO.read(imageFile);
-            meepMeep.setBackground(fieldImage);
+            if (imageFile.exists()) {
+                BufferedImage fieldImage = ImageIO.read(imageFile);
+                meepMeep.setBackground(fieldImage);
+            }
         } catch (IOException e) {
-            System.out.println("Não foi possível carregar a imagem. Usando fundo padrão.");
-            meepMeep.setBackground(MeepMeep.Background.FIELD_INTOTHEDEEP_JUICE_DARK);
+            // Se não encontrar a imagem, o MeepMeep carrega o fundo padrão automaticamente
         }
 
         meepMeep.setDarkMode(true)
