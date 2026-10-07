@@ -60,7 +60,7 @@ public class TeleOpTeste extends OpMode {
 
         else {
 
-            motor_dir.setPower(potencia_dir);
+            motor_dir.setPower(0);
 
         }
 
