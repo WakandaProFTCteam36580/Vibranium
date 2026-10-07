@@ -23,9 +23,6 @@ public class TeleOpTeste extends OpMode {
         // Inverte um dos motores para que os dois empurrem o robô para frente
         motor_dir.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        motor_dir.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motor_esq.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
         //mensagem de inicialização
         telemetry.addData("Modo teleoperado", "Ativo!");
         telemetry.update();
