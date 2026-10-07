@@ -18,15 +18,16 @@ public class TeleOpTeste extends OpMode {
 
         //nomeando as variáveis dos motores
         motor_dir = hardwareMap.get(DcMotor.class, "motor_dir");
-
         motor_esq = hardwareMap.get(DcMotor.class, "motor_esq");
 
         // Inverte um dos motores para que os dois empurrem o robô para frente
         motor_dir.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        motor_dir.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motor_esq.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         //mensagem de inicialização
         telemetry.addData("Modo teleoperado", "Ativo!");
-
         telemetry.update();
 
     }
@@ -46,10 +47,66 @@ public class TeleOpTeste extends OpMode {
 
         // Mensagens agrupadas para o Driver Hub
         telemetry.addData("Potência Esquerda", potencia_esq);
-
         telemetry.addData("Potência Direita", potencia_dir);
-
         telemetry.update();
+
+        if (gamepad1.a) {
+
+            motor_dir.setPower(0.8);
+
+            motor_esq.setPower(0.8);
+
+        }
+
+        else{
+
+            motor_dir.setPower(0);
+
+            motor_esq.setPower(0);
+
+
+        }
+
+        if (gamepad1.y){
+
+            motor_dir.setPower(-0.8);
+
+            motor_esq.setPower(-0.8);
+
+        }
+
+        else{
+
+            motor_dir.setPower(0);
+
+            motor_esq.setPower(0);
+
+        }
+
+
+        if (gamepad1.right_bumper){
+
+            motor_dir.setPower(0.5);
+
+        }
+
+        else {
+
+            motor_dir.setPower(0);
+
+        }
+
+        if (gamepad1.left_bumper){
+
+            motor_esq.setPower(0.5);
+
+        }
+
+        else {
+
+            motor_esq.setPower(0);
+
+        }
 
     }
 
