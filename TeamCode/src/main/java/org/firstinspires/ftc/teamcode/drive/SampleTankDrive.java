@@ -2,7 +2,11 @@ package org.firstinspires.ftc.teamcode.drive;
 
 import androidx.annotation.NonNull;
 
+import com.acmerobotics.roadrunner.control.PIDCoefficients;
+import com.acmerobotics.roadrunner.drive.DriveSignal;
 import com.acmerobotics.roadrunner.drive.TankDrive;
+import com.acmerobotics.roadrunner.followers.TankPIDVAFollower;
+import com.acmerobotics.roadrunner.followers.TrajectoryFollower;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
@@ -12,61 +16,56 @@ import com.acmerobotics.roadrunner.trajectory.constraints.ProfileAccelerationCon
 import com.acmerobotics.roadrunner.trajectory.constraints.TankVelocityConstraint;
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryAccelerationConstraint;
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityConstraint;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class SampleTankDrive extends TankDrive {
 
-    public static TrajectoryVelocityConstraint VEL_CONSTRAINT = getVelocityConstraint(
-            DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH
-    );
-    public static TrajectoryAccelerationConstraint ACCEL_CONSTRAINT = getAccelerationConstraint(
-            DriveConstants.MAX_ACCEL
-    );
+    public static PIDCoefficients AXIAL_PID = new PIDCoefficients(0, 0, 0);
+    public static PIDCoefficients CROSS_TRACK_PID = new PIDCoefficients(0, 0, 0);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
 
-    private final List<DcMotorEx> leftMotors;
-    private final List<DcMotorEx> rightMotors;
-    private final IMU imu;
+    public static double VX_WEIGHT = 1;
+    public static double OMEGA_WEIGHT = 1;
+
+    private TrajectoryFollower follower;
+
+    private DcMotorEx leftMotor;
+    private DcMotorEx rightMotor;
+    private List<DcMotorEx> motors;
+
+    private TrajectoryVelocityConstraint VEL_CONSTRAINT;
+    private TrajectoryAccelerationConstraint ACCEL_CONSTRAINT;
 
     public SampleTankDrive(HardwareMap hardwareMap) {
         super(DriveConstants.kV, DriveConstants.kA, DriveConstants.kStatic, DriveConstants.TRACK_WIDTH);
 
-        // Nomes dos motores declarados no Driver Hub
-        DcMotorEx leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        DcMotorEx leftMid   = hardwareMap.get(DcMotorEx.class, "leftMid");
-        DcMotorEx leftBack  = hardwareMap.get(DcMotorEx.class, "leftBack");
+        VEL_CONSTRAINT = getVelocityConstraint(DriveConstants.MAX_VEL, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH);
+        ACCEL_CONSTRAINT = getAccelerationConstraint(DriveConstants.MAX_ACCEL);
 
-        DcMotorEx rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
-        DcMotorEx rightMid   = hardwareMap.get(DcMotorEx.class, "rightMid");
-        DcMotorEx rightBack  = hardwareMap.get(DcMotorEx.class, "rightBack");
+        follower = new TankPIDVAFollower(AXIAL_PID, CROSS_TRACK_PID,
+                new Pose2d(VX_WEIGHT, 0, HEADING_PID.kP),
+                0.5);
 
-        leftMotors  = Arrays.asList(leftFront, leftMid, leftBack);
-        rightMotors = Arrays.asList(rightFront, rightMid, rightBack);
+        // É AQUI que o código vai buscar os motores ao robô físico:
 
-        for (DcMotorEx motor : leftMotors) {
+        leftMotor = hardwareMap.get(DcMotorEx.class, "motor_esq");
+        rightMotor = hardwareMap.get(DcMotorEx.class, "motor_dir");
+
+        motors = Arrays.asList(leftMotor, rightMotor);
+
+        for (DcMotorEx motor : motors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        }
-        for (DcMotorEx motor : rightMotors) {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            motor.setDirection(DcMotor.Direction.REVERSE);
+            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
 
-        // Configuração da IMU na Control Hub
-        imu = hardwareMap.get(IMU.class, "imu");
-        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
-        ));
-        imu.initialize(parameters);
+        // Inversão para garantir avanço alinhado
+        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public TrajectoryBuilder trajectoryBuilder(Pose2d startPose) {
@@ -82,41 +81,39 @@ public class SampleTankDrive extends TankDrive {
     }
 
     public void followTrajectory(Trajectory trajectory) {
-        // Execução de trajetória
-    }
-
-    @Override
-    public double getRawExternalHeading() {
-        return imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+        follower.followTrajectory(trajectory);
+        while (!Thread.currentThread().isInterrupted() && follower.isFollowing()) {
+            Pose2d currentPose = getPoseEstimate();
+            DriveSignal signal = follower.update(currentPose, getPoseVelocity());
+            setDriveSignal(signal);
+            updatePoseEstimate();
+        }
     }
 
     @NonNull
     @Override
     public List<Double> getWheelPositions() {
-        List<Double> wheelPositions = new ArrayList<>();
-        for (DcMotorEx motor : leftMotors) {
-            wheelPositions.add(DriveConstants.encoderTicksToInches(motor.getCurrentPosition()));
-        }
-        for (DcMotorEx motor : rightMotors) {
-            wheelPositions.add(DriveConstants.encoderTicksToInches(motor.getCurrentPosition()));
-        }
-        return wheelPositions;
+        return Arrays.asList(
+                (double) leftMotor.getCurrentPosition(),
+                (double) rightMotor.getCurrentPosition()
+        );
     }
 
     @Override
-    public void setMotorPowers(double left, double right) {
-        for (DcMotorEx motor : leftMotors) {
-            motor.setPower(left);
-        }
-        for (DcMotorEx motor : rightMotors) {
-            motor.setPower(right);
-        }
+    public void setMotorPowers(double v, double v1) {
+        leftMotor.setPower(v);
+        rightMotor.setPower(v1);
     }
 
-    public static TrajectoryVelocityConstraint getVelocityConstraint(double maxV, double maxAngV, double trackWidth) {
+    @Override
+    public double getRawExternalHeading() {
+        return 0.0;
+    }
+
+    public static TrajectoryVelocityConstraint getVelocityConstraint(double maxMaxVel, double maxAngularVel, double trackWidth) {
         return new MinVelocityConstraint(Arrays.asList(
-                new AngularVelocityConstraint(maxAngV),
-                new TankVelocityConstraint(maxV, trackWidth)
+                new AngularVelocityConstraint(maxAngularVel),
+                new TankVelocityConstraint(maxMaxVel, trackWidth)
         ));
     }
 
