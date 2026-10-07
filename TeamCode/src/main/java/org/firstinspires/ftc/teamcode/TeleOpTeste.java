@@ -3,46 +3,41 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-//nomenando classe como teleoperada
 @TeleOp(name = "TeleOpTeste")
+public class TeleOpTeste extends OpMode {
 
-public class TeleOpTeste extends OpMode{
-
-    //nomeando a variável
     DcMotor motor_dir;
+    DcMotor motor_esq;
 
     @Override
     public void init() {
-
-        //importanto a variável para o programa
         motor_dir = hardwareMap.get(DcMotor.class, "motor_dir");
+        motor_esq = hardwareMap.get(DcMotor.class, "motor_esq");
 
-        //adicionando mensagem que aparecerá no driver hub
-        telemetry.addData("Motor Direito", "Rodando código");
+        // Inverte um dos motores para que os dois empurrem o robô para frente
+        // (Você pode precisar trocar para o motor_esq dependendo da sua montagem física)
+        motor_dir.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        telemetry.addData("Modo teleoperado", "Ativo!");
         telemetry.update();
-
     }
 
     @Override
     public void loop() {
+        // Analógico ESQUERDO para cima/baixo controla o motor esquerdo
+        // Nota: O eixo Y é invertido no gamepad por padrão, por isso o sinal de menos (-)
+        double potencia_esq = -gamepad1.left_stick_y;
+        motor_esq.setPower(potencia_esq);
 
-        //adicionando uma variável float (serve para valores variáveis)
-        float x = (gamepad1.right_stick_y);
+        // Analógico DIREITO para cima/baixo controla o motor direito
+        double potencia_dir = -gamepad1.right_stick_y;
+        motor_dir.setPower(potencia_dir);
 
-        if (-x > 0){
-
-            motor_dir.setPower(x);
-
-        }
-
-        else{
-
-            //manda o motor parar quando a função do if não estiver sendo cumprida
-            motor_dir.setPower(0);
-
-        }
-
+        // Mensagens agrupadas para o Driver Hub
+        telemetry.addData("Potência Esquerda", potencia_esq);
+        telemetry.addData("Potência Direita", potencia_dir);
+        telemetry.update();
     }
-
 }
