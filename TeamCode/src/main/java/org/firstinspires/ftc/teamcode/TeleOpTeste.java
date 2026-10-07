@@ -22,7 +22,6 @@ public class TeleOpTeste extends OpMode {
         motor_esq = hardwareMap.get(DcMotor.class, "motor_esq");
 
         // Inverte um dos motores para que os dois empurrem o robô para frente
-        // (Você pode precisar trocar para o motor_esq dependendo da sua montagem física)
         motor_dir.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //mensagem de inicialização
