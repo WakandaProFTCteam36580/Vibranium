@@ -3,23 +3,31 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-//nomenando classe como teleoperada
 @TeleOp(name = "TeleOpTeste")
 
-public class TeleOpTeste extends OpMode{
+public class TeleOpTeste extends OpMode {
 
-    //nomeando a variável
+    //nomenando as variáveis
     DcMotor motor_dir;
+    DcMotor motor_esq;
 
     @Override
     public void init() {
 
-        //importanto a variável para o programa
+        //nomeando as variáveis dos motores
         motor_dir = hardwareMap.get(DcMotor.class, "motor_dir");
 
-        //adicionando mensagem que aparecerá no driver hub
-        telemetry.addData("Motor Direito", "Rodando código");
+        motor_esq = hardwareMap.get(DcMotor.class, "motor_esq");
+
+        // Inverte um dos motores para que os dois empurrem o robô para frente
+        // (Você pode precisar trocar para o motor_esq dependendo da sua montagem física)
+        motor_dir.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        //mensagem de inicialização
+        telemetry.addData("Modo teleoperado", "Ativo!");
+
         telemetry.update();
 
     }
@@ -27,21 +35,22 @@ public class TeleOpTeste extends OpMode{
     @Override
     public void loop() {
 
-        //adicionando uma variável float (serve para valores variáveis)
-        float x = (gamepad1.right_stick_y);
+        // Analógico ESQUERDO para cima/baixo controla o motor esquerdo
+        double potencia_esq = -gamepad1.left_stick_y;
 
-        if (-x > 0){
+        motor_esq.setPower(potencia_esq);
 
-            motor_dir.setPower(x);
+        // Analógico DIREITO para cima/baixo controla o motor direito
+        double potencia_dir = -gamepad1.right_stick_y;
 
-        }
+        motor_dir.setPower(potencia_dir);
 
-        else{
+        // Mensagens agrupadas para o Driver Hub
+        telemetry.addData("Potência Esquerda", potencia_esq);
 
-            //manda o motor parar quando a função do if não estiver sendo cumprida
-            motor_dir.setPower(0);
+        telemetry.addData("Potência Direita", potencia_dir);
 
-        }
+        telemetry.update();
 
     }
 
