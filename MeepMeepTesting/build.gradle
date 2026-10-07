@@ -8,5 +8,6 @@ java {
 }
 
 dependencies {
-    implementation 'com.github.rh-robotics:MeepMeep:v1.1.0'
+    implementation 'com.github.noahbres:MeepMeep:2.0.3'
+    implementation 'com.acmerobotics.roadrunner:core:0.5.6'
 }
