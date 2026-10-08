@@ -34,12 +34,10 @@ public class TeleOpTeste extends OpMode {
 
         // Analógico ESQUERDO para cima/baixo controla o motor esquerdo
         double potencia_esq = -gamepad1.left_stick_y;
-
         motor_esq.setPower(potencia_esq);
 
         // Analógico DIREITO para cima/baixo controla o motor direito
         double potencia_dir = -gamepad1.right_stick_y;
-
         motor_dir.setPower(potencia_dir);
 
         // Mensagens agrupadas para o Driver Hub
@@ -47,62 +45,129 @@ public class TeleOpTeste extends OpMode {
         telemetry.addData("Potência Direita", potencia_dir);
         telemetry.update();
 
+
+
+        //quando apertar o botão A, os motores girarão para frente na potência 0.8
         if (gamepad1.a) {
 
-            motor_dir.setPower(0.8);
+            motor_dir.setPower(1);
+            motor_esq.setPower(1);
 
-            motor_esq.setPower(0.8);
+            telemetry.addData("Motores", "ativos em +0.8");
+            telemetry.update();
 
         }
 
+        //quando o if nõ está sendo executado, os motores param imediatamente
         else{
 
             motor_dir.setPower(0);
-
             motor_esq.setPower(0);
 
+            telemetry.addData("Motores", "parados");
+            telemetry.update();
 
         }
 
+        //quando apertar o botão Y, os motores girarão para trás na potência -0.8
         if (gamepad1.y){
 
-            motor_dir.setPower(-0.8);
+            motor_dir.setPower(-0.9);
+            motor_esq.setPower(-0.9);
 
-            motor_esq.setPower(-0.8);
+            telemetry.addData("Motores", "ativos em -0.8");
+            telemetry.update();
 
         }
 
+        //quando o if nõ está sendo executado, os motores param imediatamente
+        else{
+
+            motor_dir.setPower(0);
+            motor_esq.setPower(0);
+
+            telemetry.addData("Motores", "parados");
+            telemetry.update();
+
+        }
+
+        //quando o B e o R1 estverem precionados, o motor direito girará na potência -0.5
+        if(gamepad1.b && gamepad1.right_bumper){
+
+            motor_dir.setPower(-0.5);
+
+            telemetry.addData("Motor Direito", "Ativo em -0.5");
+            telemetry.update();
+
+        }
+
+        //quando o if nõ está sendo executado, o motor direito para imediatamente
         else{
 
             motor_dir.setPower(0);
 
-            motor_esq.setPower(0);
+            telemetry.addData("Motor Direito", "Parado");
+            telemetry.update();
 
         }
 
+        //quando o B e o L1 estiverem precionados, o motor esquerdo girará na potência -0.5
+        if (gamepad1.b && gamepad1.left_bumper){
 
+            motor_esq.setPower(-0.5);
+
+            telemetry.addData("Motor Esquerdo", "Ativo em -0.5");
+            telemetry.update();
+
+        }
+
+        //quando o if nõ está sendo executado, o motor esquerdo para imediatamente
+        else{
+
+            motor_esq.setPower(0);
+
+            telemetry.addData("Motor Esquerdo", "Parado");
+            telemetry.update();
+
+        }
+
+        //quando o R1 estiver precionado, o motor direito girará na potência 0.5
         if (gamepad1.right_bumper){
 
             motor_dir.setPower(0.5);
 
+            telemetry.addData("Motor Direito", "Ativo em +0.5");
+            telemetry.update();
+
         }
 
-        else {
+        //quando o if nõ está sendo executado, o motor direito para imediatamente
+        else{
 
             motor_dir.setPower(0);
 
+            telemetry.addData("Motor Direito", "Parado");
+            telemetry.update();
+
         }
 
+        //quando o L1 estiver precionado, o motor esquerdo girará na potência 0.5
         if (gamepad1.left_bumper){
 
             motor_esq.setPower(0.5);
 
+            telemetry.addData("Motor Esquerdo", "Ativo em +0.5");
+            telemetry.update();
+
         }
 
-        else {
+        //quando o if nõ está sendo executado, o motor esquerdo para imediatamente
+        else{
 
             motor_esq.setPower(0);
 
+            telemetry.addData("Motor Esquerdo", "Parado");
+            telemetry.update();
         }
 
     }
