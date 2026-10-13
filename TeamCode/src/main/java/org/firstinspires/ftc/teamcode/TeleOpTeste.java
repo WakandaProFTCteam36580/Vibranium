@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -9,19 +10,28 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 public class TeleOpTeste extends OpMode {
 
-    //nomenando as variáveis
+    //Nomeando as variáveis
     DcMotor motor_dir;
     DcMotor motor_esq;
+    CRServo servoit_dir;
+    CRServo servoit_esq;
 
     @Override
     public void init() {
 
-        //nomeando as variáveis dos motores
+        //Importando as variáveis dos motores
         motor_dir = hardwareMap.get(DcMotor.class, "motor_dir");
         motor_esq = hardwareMap.get(DcMotor.class, "motor_esq");
 
-        // Inverte um dos motores para que os dois empurrem o robô para frente
+        // Inverte o sentido do motor direito para que os dois empurrem o robô para frente
         motor_dir.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        //Importando as variáveis dos servos
+        servoit_dir = hardwareMap.get(CRServo.class, "servoit_dir");
+        servoit_esq = hardwareMap.get(CRServo.class, "servoit_esq");
+
+        // Inverte o sentido do servo direito para que os dois girem no sentido que os pólens sejam capturados
+        servoit_dir.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //mensagem de inicialização
         telemetry.addData("Modo teleoperado", "Ativo!");
@@ -32,143 +42,115 @@ public class TeleOpTeste extends OpMode {
     @Override
     public void loop() {
 
-        // Analógico ESQUERDO para cima/baixo controla o motor esquerdo
-        double potencia_esq = -gamepad1.left_stick_y;
-        motor_esq.setPower(potencia_esq);
-
-        // Analógico DIREITO para cima/baixo controla o motor direito
-        double potencia_dir = -gamepad1.right_stick_y;
-        motor_dir.setPower(potencia_dir);
-
-        // Mensagens agrupadas para o Driver Hub
-        telemetry.addData("Potência Esquerda", potencia_esq);
-        telemetry.addData("Potência Direita", potencia_dir);
-        telemetry.update();
-
-
-
-        //quando apertar o botão A, os motores girarão para frente na potência 0.8
+        //quando apertar o botão A, os motores girarão para frente na potência 0.7
         if (gamepad1.a) {
 
-            motor_dir.setPower(1);
-            motor_esq.setPower(1);
+            motor_dir.setPower(0.7);
+            motor_esq.setPower(0.7);
 
-            telemetry.addData("Motores", "ativos em +0.8");
-            telemetry.update();
-
-        }
-
-        //quando o if nõ está sendo executado, os motores param imediatamente
-        else{
-
-            motor_dir.setPower(0);
-            motor_esq.setPower(0);
-
-            telemetry.addData("Motores", "parados");
-            telemetry.update();
+            telemetry.addData("Motores", "ativos em +0.7");
 
         }
 
-        //quando apertar o botão Y, os motores girarão para trás na potência -0.8
-        if (gamepad1.y){
+        //quando apertar o botão Y, os motores girarão para trás na potência -0.7
+        else if (gamepad1.y) {
 
-            motor_dir.setPower(-0.9);
-            motor_esq.setPower(-0.9);
+            motor_dir.setPower(-0.7);
+            motor_esq.setPower(-0.7);
 
-            telemetry.addData("Motores", "ativos em -0.8");
-            telemetry.update();
-
-        }
-
-        //quando o if nõ está sendo executado, os motores param imediatamente
-        else{
-
-            motor_dir.setPower(0);
-            motor_esq.setPower(0);
-
-            telemetry.addData("Motores", "parados");
-            telemetry.update();
+            telemetry.addData("Motores", "ativos em -0.7");
 
         }
 
-        //quando o B e o R1 estverem precionados, o motor direito girará na potência -0.5
-        if(gamepad1.b && gamepad1.right_bumper){
+        //se A nem Y estiverem pressionados, roda a lógica individual dos motores e analógicos
+        else {
 
-            motor_dir.setPower(-0.5);
+            //CONTROLE DO MOTOR DIREITO
+            //quando o B e o R1 estiverem pressionados, o motor direito girará na potência -0.5
+            if (gamepad1.b && gamepad1.right_bumper) {
 
-            telemetry.addData("Motor Direito", "Ativo em -0.5");
-            telemetry.update();
+                motor_dir.setPower(-0.5);
 
-        }
+                telemetry.addData("Motor Direito", "Ativo em -0.5");
 
-        //quando o if nõ está sendo executado, o motor direito para imediatamente
-        else{
+            }
 
-            motor_dir.setPower(0);
+            //quando o R1 estiver pressionado, o motor direito girará na potência 0.5
+            else if (gamepad1.right_bumper) {
 
-            telemetry.addData("Motor Direito", "Parado");
-            telemetry.update();
+                motor_dir.setPower(0.5);
 
-        }
+                telemetry.addData("Motor Direito", "Ativo em +0.5");
 
-        //quando o B e o L1 estiverem precionados, o motor esquerdo girará na potência -0.5
-        if (gamepad1.b && gamepad1.left_bumper){
+            }
 
-            motor_esq.setPower(-0.5);
+            //se nenhum botão do lado direito for pressionado, usa o Analógico DIREITO
+            else {
 
-            telemetry.addData("Motor Esquerdo", "Ativo em -0.5");
-            telemetry.update();
+                double potencia_dir = -gamepad1.right_stick_y;
 
-        }
+                motor_dir.setPower(potencia_dir);
 
-        //quando o if nõ está sendo executado, o motor esquerdo para imediatamente
-        else{
+                telemetry.addData("Potência Direita", potencia_dir);
 
-            motor_esq.setPower(0);
+            }
 
-            telemetry.addData("Motor Esquerdo", "Parado");
-            telemetry.update();
+            //CONTROLE DO MOTOR ESQUERDO
+            //quando o B e o L1 estiverem pressionados, o motor esquerdo girará na potência -0.5
+            if (gamepad1.b && gamepad1.left_bumper) {
 
-        }
+                motor_esq.setPower(-0.5);
 
-        //quando o R1 estiver precionado, o motor direito girará na potência 0.5
-        if (gamepad1.right_bumper){
+                telemetry.addData("Motor Esquerdo", "Ativo em -0.5");
 
-            motor_dir.setPower(0.5);
+            }
 
-            telemetry.addData("Motor Direito", "Ativo em +0.5");
-            telemetry.update();
+            //quando o L1 estiver pressionado, o motor esquerdo girará na potência 0.5
+            else if (gamepad1.left_bumper) {
 
-        }
+                motor_esq.setPower(0.5);
 
-        //quando o if nõ está sendo executado, o motor direito para imediatamente
-        else{
+                telemetry.addData("Motor Esquerdo", "Ativo em +0.5");
 
-            motor_dir.setPower(0);
+            }
 
-            telemetry.addData("Motor Direito", "Parado");
-            telemetry.update();
+            //se nenhum botão do lado esquerdo for pressionado, usa o Analógico ESQUERDO
+            else {
 
-        }
+                double potencia_esq = -gamepad1.left_stick_y;
+                motor_esq.setPower(potencia_esq);
 
-        //quando o L1 estiver precionado, o motor esquerdo girará na potência 0.5
-        if (gamepad1.left_bumper){
+                telemetry.addData("Potência Esquerda", potencia_esq);
 
-            motor_esq.setPower(0.5);
-
-            telemetry.addData("Motor Esquerdo", "Ativo em +0.5");
-            telemetry.update();
+            }
 
         }
 
-        //quando o if nõ está sendo executado, o motor esquerdo para imediatamente
-        else{
+        if (gamepad2.a) {
 
-            motor_esq.setPower(0);
+            servoit_dir.setPower(1.0);
 
-            telemetry.addData("Motor Esquerdo", "Parado");
-            telemetry.update();
+            telemetry.addData("servo direito", "Ativo em +1.0");
+
         }
+
+        else if (gamepad2.y) {
+
+            servoit_esq.setPower(1.0);
+
+            telemetry.addData("servo esquerdo", "Ativo em +1.0");
+
+        }
+
+        else {
+
+            servoit_dir.setPower(0);
+            servoit_esq.setPower(0);
+
+        }
+
+        // Atualiza a mensagem
+        telemetry.update();
 
     }
 

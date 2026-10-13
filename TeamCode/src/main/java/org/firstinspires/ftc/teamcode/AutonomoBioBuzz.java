@@ -47,7 +47,7 @@ public class AutonomoBioBuzz extends LinearOpMode {
         // Obtém a posição atual do robô no campo
         Pose2d posAtual = drive.getPoseEstimate();
 
-// Cria uma trajetória mantendo o mesmo X e Y, mas mudando o ângulo para -180°
+        // Cria uma trajetória mantendo o mesmo X e Y, mas mudando o ângulo para -180°
         Trajectory giro180 = drive.trajectoryBuilder(posAtual)
                 .lineToLinearHeading(new Pose2d(posAtual.getX(), posAtual.getY(), Math.toRadians(-180)))
                 .build();
