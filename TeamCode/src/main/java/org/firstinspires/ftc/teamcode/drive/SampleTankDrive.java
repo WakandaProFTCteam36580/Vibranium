@@ -52,8 +52,7 @@ public class SampleTankDrive extends TankDrive {
                 new Pose2d(VX_WEIGHT, 0, HEADING_PID.kP),
                 0.5);
 
-        // É AQUI que o código vai buscar os motores ao robô físico:
-
+        // Mapeamento das portas do robô físico
         leftMotor = hardwareMap.get(DcMotorEx.class, "motor_esq");
         rightMotor = hardwareMap.get(DcMotorEx.class, "motor_dir");
 
@@ -61,11 +60,13 @@ public class SampleTankDrive extends TankDrive {
 
         for (DcMotorEx motor : motors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            // Garante leitura de encoder ativada
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
 
-        // Inversão para garantir avanço alinhado
-        leftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        // Inversão alterada para o motor esquerdo (corrige o movimento para trás)
+        leftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public TrajectoryBuilder trajectoryBuilder(Pose2d startPose) {

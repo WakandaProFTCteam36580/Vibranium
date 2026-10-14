@@ -22,12 +22,12 @@ public class AutonomoBioBuzz extends LinearOpMode {
         Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
         drive.setPoseEstimate(startPose);
 
-        // Constrói a trajetória de travessia antes do start
+        // Constrói a trajetória de travessia inicial
         Trajectory travessia = drive.trajectoryBuilder(startPose)
                 .forward(90)
                 .build();
 
-        // Mensagem de confirmação para os pilotos
+        // Mensagem de confirmação na Driver Station
         telemetry.addData("Status", "Robô pronto para o arranque!");
         telemetry.update();
 
@@ -41,30 +41,28 @@ public class AutonomoBioBuzz extends LinearOpMode {
 
         // --- 3. FASE DE EXECUÇÃO ---
 
-        // Atravessa os 90 polegadas até o outro lado
+        // 1. Atravessa as 90 polegadas até o outro lado
         drive.followTrajectory(travessia);
 
-        // Obtém a posição atual do robô no campo
+        // 2. Giro de 180° (com offset +0.001 para evitar EmptyPathSegmentException)
         Pose2d posAtual = drive.getPoseEstimate();
-
-        // Cria uma trajetória mantendo o mesmo X e Y, mas mudando o ângulo para -180°
         Trajectory giro180 = drive.trajectoryBuilder(posAtual)
-                .lineToLinearHeading(new Pose2d(posAtual.getX(), posAtual.getY(), Math.toRadians(-180)))
+                .lineToLinearHeading(new Pose2d(posAtual.getX() + 0.001, posAtual.getY() + 0.001, Math.toRadians(-180)))
                 .build();
 
         drive.followTrajectory(giro180);
 
-        // (Espaço reservado para o acionamento do mecanismo/lançador)
+        // (Espaço reservado para acionamento de mecanismos/lançador)
 
+        // 3. Giro de -90° (com offset +0.001 para evitar EmptyPathSegmentException)
         Pose2d posAtual2 = drive.getPoseEstimate();
-
         Trajectory giro90 = drive.trajectoryBuilder(posAtual2)
-                .lineToLinearHeading(new Pose2d(posAtual2.getX(), posAtual2.getY(), Math.toRadians(-90)))
+                .lineToLinearHeading(new Pose2d(posAtual2.getX() + 0.001, posAtual2.getY() + 0.001, Math.toRadians(-90)))
                 .build();
 
         drive.followTrajectory(giro90);
 
-        // Constrói o deslocamento final lendo a posição atual do robô
+        // 4. Deslocamento final de 25 polegadas até o Jardim
         Trajectory deslocamentoJardim = drive.trajectoryBuilder(drive.getPoseEstimate())
                 .forward(25)
                 .build();
