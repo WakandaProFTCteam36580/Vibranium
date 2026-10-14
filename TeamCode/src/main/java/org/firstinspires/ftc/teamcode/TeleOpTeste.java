@@ -13,6 +13,7 @@ public class TeleOpTeste extends OpMode {
     //Nomeando as variáveis
     DcMotor motor_dir;
     DcMotor motor_esq;
+    DcMotor motor_it;
     CRServo servoit_dir;
     CRServo servoit_esq;
 
@@ -22,6 +23,8 @@ public class TeleOpTeste extends OpMode {
         //Importando as variáveis dos motores
         motor_dir = hardwareMap.get(DcMotor.class, "motor_dir");
         motor_esq = hardwareMap.get(DcMotor.class, "motor_esq");
+
+        motor_it = hardwareMap.get(DcMotor.class, "motor_it");
 
         // Inverte o sentido do motor direito para que os dois empurrem o robô para frente
         motor_dir.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -129,16 +132,17 @@ public class TeleOpTeste extends OpMode {
         if (gamepad2.a) {
 
             servoit_dir.setPower(1.0);
+            servoit_esq.setPower(1.0);
 
-            telemetry.addData("servo direito", "Ativo em +1.0");
+            telemetry.addData("Servos", "Ativos em +1.0");
 
         }
 
         else if (gamepad2.y) {
 
-            servoit_esq.setPower(1.0);
+            motor_it.setPower(0.8);
 
-            telemetry.addData("servo esquerdo", "Ativo em +1.0");
+            telemetry.addData("Intake", "Ativo em +0.8");
 
         }
 
@@ -146,6 +150,7 @@ public class TeleOpTeste extends OpMode {
 
             servoit_dir.setPower(0);
             servoit_esq.setPower(0);
+            motor_it.setPower(0);
 
         }
 
