@@ -4,22 +4,17 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.drive.SampleTankDrive;
 
 @Autonomous(name = "Autonomo BioBuzz", group = "Autonomous")
 public class AutonomoBioBuzz extends LinearOpMode {
-    DcMotor motor_dir;
-    DcMotor motor_esq;
 
     @Override
     public void runOpMode() throws InterruptedException {
 
         // --- 1. FASE DE INICIALIZAÇÃO (INIT) ---
 
-
-        // Configura a base motriz de tração
+        // Configura a base motriz de tração (mapeamento de hardware feito internamente)
         SampleTankDrive drive = new SampleTankDrive(hardwareMap);
 
         // Posição inicial do robô (X: 0, Y: 0, Ângulo: 0)
@@ -45,10 +40,10 @@ public class AutonomoBioBuzz extends LinearOpMode {
 
         // --- 3. FASE DE EXECUÇÃO ---
 
-// 1. Atravessa os 90 polegadas até o outro lado
+        // 1. Atravessa as 90 polegadas até o outro lado
         drive.followTrajectory(travessia);
 
-// 2. Giro de 180° (Ajustando apenas +0.001 no X para respeitar a cinemática Tank)
+        // 2. Giro de 180° (mantendo +0.001 em X para evitar segmento nulo)
         Pose2d posAtual = drive.getPoseEstimate();
         Trajectory giro180 = drive.trajectoryBuilder(posAtual)
                 .lineToLinearHeading(new Pose2d(posAtual.getX() + 0.001, posAtual.getY(), Math.toRadians(-180)))
@@ -56,9 +51,9 @@ public class AutonomoBioBuzz extends LinearOpMode {
 
         drive.followTrajectory(giro180);
 
-// (Espaço reservado para o acionamento do mecanismo/lançador)
+        // (Espaço reservado para o acionamento do mecanismo/lançador)
 
-// 3. Giro de -90°
+        // 3. Giro de -90° absoluto no plano do campo
         Pose2d posAtual2 = drive.getPoseEstimate();
         Trajectory giro90 = drive.trajectoryBuilder(posAtual2)
                 .lineToLinearHeading(new Pose2d(posAtual2.getX() + 0.001, posAtual2.getY(), Math.toRadians(-90)))
@@ -66,7 +61,7 @@ public class AutonomoBioBuzz extends LinearOpMode {
 
         drive.followTrajectory(giro90);
 
-// 4. Deslocamento final de 25 polegadas até o Jardim
+        // 4. Deslocamento final de 25 polegadas até o Jardim
         Trajectory deslocamentoJardim = drive.trajectoryBuilder(drive.getPoseEstimate())
                 .forward(25)
                 .build();
