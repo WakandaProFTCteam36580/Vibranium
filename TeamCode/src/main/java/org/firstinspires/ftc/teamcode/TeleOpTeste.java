@@ -138,7 +138,14 @@ public class TeleOpTeste extends OpMode {
 
         }
 
-        else if (gamepad2.y) {
+        else {
+
+            servoit_dir.setPower(0);
+            servoit_esq.setPower(0);
+
+        }
+
+        if (gamepad2.y) {
 
             motor_it.setPower(0.8);
 
@@ -148,8 +155,6 @@ public class TeleOpTeste extends OpMode {
 
         else {
 
-            servoit_dir.setPower(0);
-            servoit_esq.setPower(0);
             motor_it.setPower(0);
 
         }
