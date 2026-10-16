@@ -21,9 +21,9 @@ public class AutonomoBioBuzz extends LinearOpMode {
         Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
         drive.setPoseEstimate(startPose);
 
-        // 1. Constrói a trajetória de travessia inicial (90 polegadas)
-        Trajectory travessia = drive.trajectoryBuilder(startPose)
-                .forward(90)
+        // 1. Travessia inicial expandida para 140 polegadas
+        Trajectory travessia140 = drive.trajectoryBuilder(startPose)
+                .forward(140)
                 .build();
 
         telemetry.addData("Status", "Robô pronto para o arranque!");
@@ -39,32 +39,35 @@ public class AutonomoBioBuzz extends LinearOpMode {
 
         // --- 3. FASE DE EXECUÇÃO ---
 
-        // Executa a travessia reta de 90 polegadas
-        drive.followTrajectory(travessia);
+        // Step 1: Avança 140 polegadas até cruzar a posição correta
+        drive.followTrajectory(travessia140);
 
-        // 2. Giro de 180° Manual (Motor esquerdo para frente, direito para trás)
-        // Dica: Ajuste o tempo (ex: 800 ms) no treino de bancada até o robô dar meia-volta completa
-        girarPorTempo(drive, 0.4, -0.4, 800);
+        // Step 2: Giro de 180° (Aumentado tempo para 1450ms para completar a meia-volta)
+        girarPorTempo(drive, -0.4, 0.4, 1450);
+        drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(180)));
 
-        // Informa ao Road Runner a nova orientação (-180°) após o giro manual
-        Pose2d posPosGiro180 = new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(-180));
-        drive.setPoseEstimate(posPosGiro180);
+        // Step 3: Espera 5 segundos
+        sleep(5000);
 
-        // (Espaço reservado para acionamento de atuadores/lançador)
+        // Step 4: Virar para a ESQUERDA em 90° (Aumentado tempo para 750ms)
+        girarPorTempo(drive, -0.4, 0.4, 750);
+        drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(270)));
 
-        // 3. Giro de -90° Manual (Gira mais 90° no mesmo sentido)
-        girarPorTempo(drive, 0.4, -0.4, 400);
-
-        // Informa ao Road Runner a nova orientação (-270° / +90°)
-        Pose2d posPosGiro90 = new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(-270));
-        drive.setPoseEstimate(posPosGiro90);
-
-        // 4. Deslocamento final de 25 polegadas até o Jardim
-        Trajectory deslocamentoJardim = drive.trajectoryBuilder(drive.getPoseEstimate())
-                .forward(25)
+        // Step 5: Andar para a frente 35 polegadas
+        Trajectory avanco1 = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .forward(35)
                 .build();
+        drive.followTrajectory(avanco1);
 
-        drive.followTrajectory(deslocamentoJardim);
+        // Step 6: Virar para a DIREITA em 90° (Aumentado tempo para 750ms)
+        girarPorTempo(drive, 0.4, -0.4, 750);
+        drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(180)));
+
+        // Step 7: Finalizar andando 40 polegadas para a frente
+        Trajectory avancoFinal = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .forward(40)
+                .build();
+        drive.followTrajectory(avancoFinal);
     }
 
     /**
