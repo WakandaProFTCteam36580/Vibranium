@@ -4,6 +4,7 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
 import org.firstinspires.ftc.teamcode.drive.SampleTankDrive;
 
 @Autonomous(name = "Autonomo BioBuzz", group = "Autonomous")
@@ -14,19 +15,17 @@ public class AutonomoBioBuzz extends LinearOpMode {
 
         // --- 1. FASE DE INICIALIZAÇÃO (INIT) ---
 
-        // Configura a base motriz de tração (mapeamento de hardware feito internamente)
         SampleTankDrive drive = new SampleTankDrive(hardwareMap);
 
-        // Posição inicial do robô (X: 0, Y: 0, Ângulo: 0)
+        // Posição inicial do robô (X: 0, Y: 0, Ângulo: 0°)
         Pose2d startPose = new Pose2d(0, 0, Math.toRadians(0));
         drive.setPoseEstimate(startPose);
 
-        // Constrói a trajetória de travessia inicial
-        Trajectory travessia = drive.trajectoryBuilder(startPose)
-                .forward(90)
+        // 1. Travessia inicial expandida para 140 polegadas
+        Trajectory travessia140 = drive.trajectoryBuilder(startPose)
+                .forward(140)
                 .build();
 
-        // Mensagem de confirmação na Driver Station
         telemetry.addData("Status", "Robô pronto para o arranque!");
         telemetry.update();
 
@@ -40,32 +39,43 @@ public class AutonomoBioBuzz extends LinearOpMode {
 
         // --- 3. FASE DE EXECUÇÃO ---
 
-        // 1. Atravessa as 90 polegadas até o outro lado
-        drive.followTrajectory(travessia);
+        // Step 1: Avança 140 polegadas até cruzar a posição correta
+        drive.followTrajectory(travessia140);
 
-        // 2. Giro de 180° (mantendo +0.001 em X para evitar segmento nulo)
-        Pose2d posAtual = drive.getPoseEstimate();
-        Trajectory giro180 = drive.trajectoryBuilder(posAtual)
-                .lineToLinearHeading(new Pose2d(posAtual.getX() + 0.001, posAtual.getY(), Math.toRadians(-180)))
+        // Step 2: Giro de 180° (Aumentado tempo para 1450ms para completar a meia-volta)
+        girarPorTempo(drive, -0.4, 0.4, 1450);
+        drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(180)));
+
+        // Step 3: Espera 5 segundos
+        sleep(5000);
+
+        // Step 4: Virar para a ESQUERDA em 90° (Aumentado tempo para 750ms)
+        girarPorTempo(drive, -0.4, 0.4, 750);
+        drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(270)));
+
+        // Step 5: Andar para a frente 35 polegadas
+        Trajectory avanco1 = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .forward(35)
                 .build();
+        drive.followTrajectory(avanco1);
 
-        drive.followTrajectory(giro180);
+        // Step 6: Virar para a DIREITA em 90° (Aumentado tempo para 750ms)
+        girarPorTempo(drive, 0.4, -0.4, 750);
+        drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(180)));
 
-        // (Espaço reservado para o acionamento do mecanismo/lançador)
-
-        // 3. Giro de -90° absoluto no plano do campo
-        Pose2d posAtual2 = drive.getPoseEstimate();
-        Trajectory giro90 = drive.trajectoryBuilder(posAtual2)
-                .lineToLinearHeading(new Pose2d(posAtual2.getX() + 0.001, posAtual2.getY(), Math.toRadians(-90)))
+        // Step 7: Finalizar andando 40 polegadas para a frente
+        Trajectory avancoFinal = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .forward(40)
                 .build();
+        drive.followTrajectory(avancoFinal);
+    }
 
-        drive.followTrajectory(giro90);
-
-        // 4. Deslocamento final de 25 polegadas até o Jardim
-        Trajectory deslocamentoJardim = drive.trajectoryBuilder(drive.getPoseEstimate())
-                .forward(25)
-                .build();
-
-        drive.followTrajectory(deslocamentoJardim);
+    /**
+     * Método auxiliar para realizar rotação aplicando potências opostas nos motores por um tempo definido.
+     */
+    private void girarPorTempo(SampleTankDrive drive, double potEsq, double potDir, long tempoMs) {
+        drive.setMotorPowers(potEsq, potDir);
+        sleep(tempoMs);
+        drive.setMotorPowers(0, 0); // Trava os motores após o tempo estipulado
     }
 }
