@@ -111,25 +111,17 @@ public class TeleOpTeste extends OpMode {
 
         //GAMEPAD 2
 
-        //CONFIGURAÇÃO DOS SERVOS DO INTAKE
-        //CONTROLE DO SERVO DA FLOWER POSITIVAMENTE
-        if (gamepad2.y) {
+        //CONFIGURAÇÃO DO INTAKE
+        if (gamepad2.a) {
             servoit_dir.setPower(1.0);
             servoit_esq.setPower(1.0);
-            telemetry.addData("Servos", "Ativos em +1.0");
+            motor_it.setPower(1.0);
+            telemetry.addData("Imtake", "Ativo!");
         }
         else {
             servoit_dir.setPower(0);
             servoit_esq.setPower(0);
-        }
-
-        //CONRTROLE DOS SERVOS/MOTORES DO INTAKE NEGATIVAMENTE
-        if (gamepad2.a) {
-            servo_teste.setPower(1.0);
-            telemetry.addData("Intake", "Ativo em +1.0");
-        }
-        else {
-            servo_teste.setPower(0);
+            motor_it.setPower(0);
         }
 
         //Mensagem de atualização
