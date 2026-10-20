@@ -13,12 +13,14 @@ import com.qualcomm.robotcore.hardware.PwmControl;
 public class TeleOpTeste extends OpMode {
 
     //Nomeando as variáveis
-    DcMotor motor_dir;
-    DcMotor motor_esq;
-    DcMotor motor_it;
-    CRServo servo_teste;
-    CRServo servoit_dir;
-    CRServo servoit_esq;
+    DcMotor motor_dir; //Porta de motor 0
+    DcMotor motor_esq; //Porta de motor 1
+    DcMotor motor_it; //Porta de motor 2
+    DcMotor motor_sh; //Porta de motor 3
+
+    CRServo servoit_esq; //Porta de servos 0
+    CRServo servoit_dir; //Porta de servos 1
+    CRServo servo_lift; //Porta de servos 2
 
     @Override
     public void init() {
@@ -26,24 +28,25 @@ public class TeleOpTeste extends OpMode {
         motor_dir = hardwareMap.get(DcMotor.class, "motor_dir");
         motor_esq = hardwareMap.get(DcMotor.class, "motor_esq");
         motor_it = hardwareMap.get(DcMotor.class, "motor_it");
+        motor_sh = hardwareMap.get(DcMotor.class, "motor_sh");
 
         //INVERTENDO O SENTIDO DO MOTOR DIREITO
         motor_dir.setDirection(DcMotorSimple.Direction.REVERSE);
         motor_it.setDirection(DcMotorSimple.Direction.REVERSE);
+        motor_sh.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //IMPORTANDO AS VARIÁVEIS DOS SERVOS
         servoit_dir = hardwareMap.get(CRServo.class, "servoit_dir");
         servoit_esq = hardwareMap.get(CRServo.class, "servoit_esq");
-        servo_teste = hardwareMap.get(CRServo.class, "servo_teste");
+        servo_lift = hardwareMap.get(CRServo.class, "servo_teste");
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS SERVOS
         ((CRServoImplEx) servoit_dir).setPwmRange(new PwmControl.PwmRange(500, 2500));
         ((CRServoImplEx) servoit_esq).setPwmRange(new PwmControl.PwmRange(500, 2500));
-        ((CRServoImplEx) servo_teste).setPwmRange(new PwmControl.PwmRange(500, 2500));
 
-        // INVERTENDO SENTIDO DO SERVO DO INTEAKE DIREITO
+        //INVERTENDO SENTIDO DOS SERVOS
         servoit_dir.setDirection(DcMotorSimple.Direction.REVERSE);
-        servo_teste.setDirection(DcMotorSimple.Direction.REVERSE);
+        servo_lift.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //MENSAGEM DE INICIALIZAÇÃO
         telemetry.addData("Modo teleoperado", "Ativo!");
@@ -113,15 +116,21 @@ public class TeleOpTeste extends OpMode {
 
         //CONFIGURAÇÃO DO INTAKE
         if (gamepad2.a) {
-            servoit_dir.setPower(1.0);
             servoit_esq.setPower(1.0);
+            servoit_dir.setPower(1.0);
             motor_it.setPower(1.0);
-            telemetry.addData("Imtake", "Ativo!");
+            telemetry.addData("Intake", "Ativo!");
         }
         else {
             servoit_dir.setPower(0);
             servoit_esq.setPower(0);
             motor_it.setPower(0);
+        }
+        if (gamepad2.right_stick_button) {
+            motor_sh.setPower(1.0);
+        }
+        else {
+            motor_sh.setPower(0);
         }
 
         //Mensagem de atualização
