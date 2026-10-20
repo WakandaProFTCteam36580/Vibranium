@@ -16,10 +16,15 @@ import com.acmerobotics.roadrunner.trajectory.constraints.ProfileAccelerationCon
 import com.acmerobotics.roadrunner.trajectory.constraints.TankVelocityConstraint;
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryAccelerationConstraint;
 import com.acmerobotics.roadrunner.trajectory.constraints.TrajectoryVelocityConstraint;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,9 +40,21 @@ public class SampleTankDrive extends TankDrive {
 
     private TrajectoryFollower follower;
 
+    // Motores da Tração
     private DcMotorEx leftMotor;
     private DcMotorEx rightMotor;
     private List<DcMotorEx> motors;
+
+    // --- MOTORES E SERVOS ADICIONAIS ---
+    public DcMotorEx motor_it;   // Porta 2
+    public DcMotorEx motor_sh;   // Porta 3
+
+    public CRServo servoit_esq;  // Porta Servo 0
+    public CRServo servoit_dir;  // Porta Servo 1
+    public CRServo servo_lift;   // Porta Servo 2
+
+    // --- GIROSCÓPIO INTEGRADO (IMU) ---
+    public IMU imu;
 
     private TrajectoryVelocityConstraint VEL_CONSTRAINT;
     private TrajectoryAccelerationConstraint ACCEL_CONSTRAINT;
@@ -52,7 +69,7 @@ public class SampleTankDrive extends TankDrive {
                 new Pose2d(VX_WEIGHT, 0, HEADING_PID.kP),
                 0.5);
 
-        // Mapeamento das portas do robô físico
+        // Mapeamento dos Motores de Tração
         leftMotor = hardwareMap.get(DcMotorEx.class, "motor_esq");
         rightMotor = hardwareMap.get(DcMotorEx.class, "motor_dir");
 
@@ -60,13 +77,68 @@ public class SampleTankDrive extends TankDrive {
 
         for (DcMotorEx motor : motors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            // Garante leitura de encoder ativada
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
 
-        // Inversão alterada para o motor esquerdo (corrige o movimento para trás)
         leftMotor.setDirection(DcMotorSimple.Direction.FORWARD);
         rightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        // Mapeamento dos Mecanismos
+        motor_it = hardwareMap.get(DcMotorEx.class, "motor_it");
+        motor_sh = hardwareMap.get(DcMotorEx.class, "motor_sh");
+
+        servoit_esq = hardwareMap.get(CRServo.class, "servoit_esq");
+        servoit_dir = hardwareMap.get(CRServo.class, "servoit_dir");
+        servo_lift = hardwareMap.get(CRServo.class, "servo_lift");
+
+        motor_it.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor_sh.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        // --- INICIALIZAÇÃO DO GIROSCÓPIO DA CONTROL HUB ---
+        imu = hardwareMap.get(IMU.class, "imu");
+
+        // Ajuste a orientação física de montagem da sua Control Hub no chassis
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD));
+
+        imu.initialize(parameters);
+        imu.resetYaw();
+    }
+
+    /**
+     * Gira o robô por graus reais medidos pelo giroscópio (IMU).
+     * @param anguloAlvo Graus desejados (Positivo = Esquerda / Negativo = Direita)
+     * @param potencia Potência de rotação dos motores (ex: 0.4)
+     */
+    public void girarPorAngulo(double anguloAlvo, double potencia) {
+        imu.resetYaw(); // Zera o ângulo antes do giro
+
+        double potEsq = (anguloAlvo > 0) ? -potencia : potencia;
+        double potDir = (anguloAlvo > 0) ? potencia : -potencia;
+
+        setMotorPowers(potEsq, potDir);
+
+        if (anguloAlvo > 0) {
+            // Giro para a Esquerda
+            while (getAnguloAtual() < anguloAlvo) {
+                // Aguarda o robô atingir o ângulo exato
+            }
+        } else {
+            // Giro para a Direita
+            while (getAnguloAtual() > anguloAlvo) {
+                // Aguarda o robô atingir o ângulo exato
+            }
+        }
+
+        setMotorPowers(0, 0); // Trava os motores ao atingir a orientação
+    }
+
+    /**
+     * Retorna o ângulo Yaw atual em graus (-180° a +180°).
+     */
+    public double getAnguloAtual() {
+        return imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
     }
 
     public TrajectoryBuilder trajectoryBuilder(Pose2d startPose) {
