@@ -38,7 +38,7 @@ public class TeleOpTeste extends OpMode {
         //IMPORTANDO AS VARIÁVEIS DOS SERVOS
         servoit_dir = hardwareMap.get(CRServo.class, "servoit_dir");
         servoit_esq = hardwareMap.get(CRServo.class, "servoit_esq");
-        servo_lift = hardwareMap.get(CRServo.class, "servo_teste");
+        servo_lift = hardwareMap.get(CRServo.class, "servo_lift");
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS SERVOS
         ((CRServoImplEx) servoit_dir).setPwmRange(new PwmControl.PwmRange(500, 2500));
@@ -126,7 +126,7 @@ public class TeleOpTeste extends OpMode {
             servoit_esq.setPower(0);
             motor_it.setPower(0);
         }
-        if (gamepad2.right_stick_button) {
+        if (gamepad2.b) {
             motor_sh.setPower(1.0);
         }
         else {
