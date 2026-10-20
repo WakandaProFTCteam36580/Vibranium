@@ -42,25 +42,25 @@ public class AutonomoBioBuzz extends LinearOpMode {
         // Step 1: Avança 140 polegadas até cruzar a posição correta
         drive.followTrajectory(travessia140);
 
-        // Step 2: Giro de 180° (Aumentado tempo para 1450ms para completar a meia-volta)
+        // Step 2: Giro de 180°
         girarPorTempo(drive, -0.4, 0.4, 1700);
         drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(180)));
 
         // Step 3: Espera 5 segundos
         sleep(5000);
 
-        // Step 4: Virar para a ESQUERDA em 90° (Aumentado tempo para 950ms)
-        girarPorTempo(drive, -0.4, 0.4, 950);
+        // Step 4: Virar para a DIREITA em 90°
+        girarPorTempo(drive, 0.4, -0.4, 950);
         drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(270)));
 
-        // Step 5: Andar para a frente 35 polegadas
+        // Step 5: Andar para a frente, 35 polegadas
         Trajectory avanco1 = drive.trajectoryBuilder(drive.getPoseEstimate())
                 .forward(35)
                 .build();
         drive.followTrajectory(avanco1);
 
-        // Step 6: Virar para a DIREITA em 90° (Aumentado tempo para 750ms)
-        girarPorTempo(drive, 0.4, -0.4, 950);
+        // Step 6: Virar para a ESQUERDA em 90°
+        girarPorTempo(drive, -0.4, 0.4, 950);
         drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(180)));
 
         // Step 7: Finalizar andando 40 polegadas para a frente
