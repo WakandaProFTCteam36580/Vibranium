@@ -75,15 +75,15 @@ public class TeleOpTeste extends OpMode {
 
         //CONFIGURAÇÃO DO MOTOR DIREITO
         else {
-            //CONTROLE DO MOTOR DE TRAÇÃO DIREITO EM -0.7
+            //CONTROLE DO MOTOR DE TRAÇÃO DIREITO EM -0.6
             if (gamepad1.b && gamepad1.right_bumper) {
-                motor_dir.setPower(-0.7);
-                telemetry.addData("Motor Direito", "Ativo em -0.7");
+                motor_dir.setPower(-0.6);
+                telemetry.addData("Motor Direito", "Ativo em -0.6");
             }
-            //CONTROLE DO MOTOR DE TRAÇÃO DIREITO EM +0.7
+            //CONTROLE DO MOTOR DE TRAÇÃO DIREITO EM +0.6
             else if (gamepad1.right_bumper) {
-                motor_dir.setPower(0.7);
-                telemetry.addData("Motor Direito", "Ativo em +0.7");
+                motor_dir.setPower(0.6);
+                telemetry.addData("Motor Direito", "Ativo em +0.6");
             }
             //CONTROLE DO MOTOR DE TRAÇÃO DIREITO NO ANALÓGICO
             else {
@@ -94,15 +94,15 @@ public class TeleOpTeste extends OpMode {
 
 
             //CONFIGURAÇÃO DO MOTOR ESQUERDO
-            //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO EM -0.7
+            //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO EM -0.6
             if (gamepad1.b && gamepad1.left_bumper) {
-                motor_esq.setPower(-0.7);
-                telemetry.addData("Motor Esquerdo", "Ativo em -0.7");
+                motor_esq.setPower(-0.6);
+                telemetry.addData("Motor Esquerdo", "Ativo em -0.6");
             }
-            //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO EM +0.7
+            //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO EM +0.6
             else if (gamepad1.left_bumper) {
-                motor_esq.setPower(0.5);
-                telemetry.addData("Motor Esquerdo", "Ativo em +0.5");
+                motor_esq.setPower(0.6);
+                telemetry.addData("Motor Esquerdo", "Ativo em +0.6");
             }
             //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO NO ANALÓGICO
             else {
@@ -114,23 +114,36 @@ public class TeleOpTeste extends OpMode {
 
         //GAMEPAD 2
 
-        //CONFIGURAÇÃO DO INTAKE
+        //CONTROLE DO SHOOTER
+        if (gamepad2.right_bumper) {
+            motor_sh.setPower(0.1);
+        }
+        else if (gamepad2.left_bumper) {
+            motor_sh.setPower(-0.1);
+        }
+        else {
+            motor_sh.setPower(0);
+        }
+
+        //CONFIGURAÇÃO DO INTAKE (SERVOS E MOTOR)
         if (gamepad2.a) {
             servoit_esq.setPower(1.0);
             servoit_dir.setPower(1.0);
             motor_it.setPower(1.0);
             telemetry.addData("Intake", "Ativo!");
         }
+        else if (gamepad2.b) {
+            motor_it.setPower(-1.0);
+        }
         else {
-            servoit_dir.setPower(0);
             servoit_esq.setPower(0);
+            servoit_dir.setPower(0);
             motor_it.setPower(0);
         }
-        if (gamepad2.b) {
-            motor_sh.setPower(1.0);
-        }
-        else {
-            motor_sh.setPower(0);
+
+        //CONFIGURANDO O SERVO DO LIFT
+        if (gamepad2.x) {
+            servo_lift.setPower(1.0);
         }
 
         //Mensagem de atualização
