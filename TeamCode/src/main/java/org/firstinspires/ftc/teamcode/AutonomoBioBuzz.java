@@ -36,10 +36,10 @@ public class AutonomoBioBuzz extends LinearOpMode {
 
         // 3. FASE DE EXECUÇÃO
 
-        // Avança até cruzar a posição da Colmeia
+        // Avança em 140°
         drive.followTrajectory(travessia140);
 
-        // : Giro de 180° exatos via Giroscópio
+        // : Giro de 180°
         drive.girarPorAngulo(180, 0.4);
         drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(180)));
 
@@ -69,7 +69,7 @@ public class AutonomoBioBuzz extends LinearOpMode {
         //
 
 
-        // Virar 90° para a ESQUERDA via Giroscópio
+        // Virar 90° para a ESQUERDA
         drive.girarPorAngulo(90, 0.4);
         drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(270)));
 
@@ -79,7 +79,7 @@ public class AutonomoBioBuzz extends LinearOpMode {
                 .build();
         drive.followTrajectory(avanco1);
 
-        // Virar 90° para a DIREITA via Giroscópio (-90)
+        // Virar 90° para a DIREITA (-90)
         drive.girarPorAngulo(-90, 0.4);
         drive.setPoseEstimate(new Pose2d(drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toRadians(180)));
 
@@ -89,7 +89,7 @@ public class AutonomoBioBuzz extends LinearOpMode {
                 .build();
         drive.followTrajectory(avancoFinal);
 
-        telemetry.addData("Status", "Autônomo Concluído com Giroscópio!");
+        telemetry.addData("Status", "Autônomo Concluído!");
         telemetry.update();
     }
 }
