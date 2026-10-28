@@ -112,14 +112,14 @@ public class TeleOpTeste extends OpMode {
             }
         }
 
-        //GAMEPAD 2
 
+        //GAMEPAD 2
         //CONTROLE DO SHOOTER
         if (gamepad2.right_bumper) {
-            motor_sh.setPower(0.1);
+            motor_sh.setPower(1.0);
         }
         else if (gamepad2.left_bumper) {
-            motor_sh.setPower(-0.1);
+            motor_sh.setPower(-0.07);
         }
         else {
             motor_sh.setPower(0);
