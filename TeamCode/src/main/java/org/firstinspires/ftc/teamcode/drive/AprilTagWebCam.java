@@ -11,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,6 @@ public class AprilTagWebCam {
     private VisionPortal visionPortal;
 
     private List<AprilTagDetection> detectedTags = new ArrayList<>();
-
     private Telemetry telemetry;
 
     public void init(HardwareMap hwMap, Telemetry telemetry) {
@@ -52,8 +52,12 @@ public class AprilTagWebCam {
 
     public AprilTagDetection getTagBySpecificId(int id) {
         for (AprilTagDetection detection : detectedTags) {
-            if (detection.id == id) {
-                return detection;
+            // Verifica se a deteção é uma tag individual para poder ler o ID de forma segura
+            if (detection instanceof AprilTagSingleDetection) {
+                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) detection;
+                if (singleDet.id == id) {
+                    return detection;
+                }
             }
         }
         return null;
