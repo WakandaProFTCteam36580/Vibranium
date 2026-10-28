@@ -114,24 +114,30 @@ public class SampleTankDrive extends TankDrive {
     public void girarPorAngulo(double anguloAlvo, double potencia) {
         imu.resetYaw(); // Zera o ângulo antes do giro
 
+        // Define a direção com base no sinal do alvo
         double potEsq = (anguloAlvo > 0) ? -potencia : potencia;
         double potDir = (anguloAlvo > 0) ? potencia : -potencia;
 
         setMotorPowers(potEsq, potDir);
 
+        // Define uma margem de tolerância (ex: 2 graus de margem)
+        double tolerancia = 2.0;
+
         if (anguloAlvo > 0) {
-            // Giro para a Esquerda
-            while (getAnguloAtual() < anguloAlvo) {
-                // Aguarda o robô atingir o ângulo exato
+            // Giro para a Esquerda (o ângulo atual aumenta em valores positivos)
+            while (getAnguloAtual() < (anguloAlvo - tolerancia)) {
+                // O ciclo continua vazio, MAS agora a condição relê o sensor a cada iteração!
+                // Nota: para garantir que o FTC processa o ciclo sem congelar,
+                // podes adicionar um pequeno yield se necessário, mas ler o getAnguloAtual() já força a atualização.
             }
         } else {
-            // Giro para a Direita
-            while (getAnguloAtual() > anguloAlvo) {
-                // Aguarda o robô atingir o ângulo exato
+            // Giro para a Direita (o ângulo atual desce em valores negativos)
+            while (getAnguloAtual() > (anguloAlvo + tolerancia)) {
+                // Continua a rodar até atingir o limite com tolerância
             }
         }
 
-        setMotorPowers(0, 0); // Trava os motores ao atingir a orientação
+        setMotorPowers(0, 0); // Trava obrigatoriamente os motores ao atingir o alvo
     }
 
     /**
