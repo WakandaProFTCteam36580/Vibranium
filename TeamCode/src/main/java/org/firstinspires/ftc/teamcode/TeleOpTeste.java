@@ -21,6 +21,7 @@ public class TeleOpTeste extends OpMode {
     CRServo servoit_esq; //Porta de servos 0
     CRServo servoit_dir; //Porta de servos 1
     CRServo servo_lift; //Porta de servos 2
+    CRServo servo_catraca; //Porta de servo 3
 
     @Override
     public void init() {
@@ -39,6 +40,7 @@ public class TeleOpTeste extends OpMode {
         servoit_dir = hardwareMap.get(CRServo.class, "servoit_dir");
         servoit_esq = hardwareMap.get(CRServo.class, "servoit_esq");
         servo_lift = hardwareMap.get(CRServo.class, "servo_lift");
+        servo_catraca = hardwareMap.get(CRServo.class, "servo_catraca");
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS SERVOS
         ((CRServoImplEx) servoit_dir).setPwmRange(new PwmControl.PwmRange(500, 2500));
@@ -47,6 +49,7 @@ public class TeleOpTeste extends OpMode {
         //INVERTENDO SENTIDO DOS SERVOS
         servoit_dir.setDirection(DcMotorSimple.Direction.REVERSE);
         servo_lift.setDirection(DcMotorSimple.Direction.REVERSE);
+        servo_catraca.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //MENSAGEM DE INICIALIZAÇÃO
         telemetry.addData("Modo teleoperado", "Ativo!");
@@ -144,7 +147,10 @@ public class TeleOpTeste extends OpMode {
 
         //CONFIGURANDO O SERVO DO LIFT
         if (gamepad2.x) {
-            servo_lift.setPower(1.0);
+            servo_catraca.setPower(1.0);
+        }
+        else if (gamepad2.y) {
+            servo_catraca.setPower(-1.0);
         }
 
         //Mensagem de atualização
