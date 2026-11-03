@@ -43,7 +43,7 @@ public class TeleOpTeste extends OpMode {
         //EXPANDINDO O RANGE PWM PARA OS SERVOS SERVOS
         ((CRServoImplEx) servoit_dir).setPwmRange(new PwmControl.PwmRange(500, 2500));
         ((CRServoImplEx) servoit_esq).setPwmRange(new PwmControl.PwmRange(500, 2500));
-
+    
         //INVERTENDO SENTIDO DOS SERVOS
         servoit_dir.setDirection(DcMotorSimple.Direction.REVERSE);
         servo_lift.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -113,10 +113,11 @@ public class TeleOpTeste extends OpMode {
         }
 
 
+
         //GAMEPAD 2
         //CONTROLE DO SHOOTER
         if (gamepad2.right_bumper) {
-            motor_sh.setPower(1.0);
+            motor_sh.setPower(0.63);
         }
         else if (gamepad2.left_bumper) {
             motor_sh.setPower(-0.07);
