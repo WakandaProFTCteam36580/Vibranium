@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FTC BioBuzz – Simulador 3D</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{--bg:#f4f4f5;--pn:#fff;--tx:#18181b;--mu:#71717a;--bd:#e4e4e7;--ac:#dc2626;--ok:#059669;--cd:#f4f4f5;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#09090b;--pn:#111114;--tx:#f4f4f5;--mu:#a1a1aa;--bd:#27272a;--ok:#34d399;--cd:#1a1a1f}}
+:root[data-theme="dark"]{--bg:#09090b;--pn:#111114;--tx:#f4f4f5;--mu:#a1a1aa;--bd:#27272a;--ok:#34d399;--cd:#1a1a1f}
+html,body{height:100%;margin:0}
+body{display:flex;background:var(--bg);color:var(--tx);font:13px system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+#view{flex:1;position:relative;min-width:0;background:#09090b}
+#view canvas{display:block}
+.hud{position:absolute;background:rgba(10,10,14,.78);color:#f4f4f5;border:1px solid #3f3f46;border-radius:10px;padding:6px 10px;font:12px ui-monospace,Menlo,monospace}
+#panel{width:300px;overflow:auto;background:var(--pn);border-left:1px solid var(--bd);padding:10px}
+.card{background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:9px;margin-bottom:9px}
+.card h3{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu)}
+.row{display:flex;justify-content:space-between;gap:6px;align-items:center}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.slot{height:30px;border:1px dashed var(--bd);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--mu)}
+.bar{height:8px;background:var(--bd);border-radius:4px;overflow:hidden;margin:3px 0 7px}.bar i{display:block;height:100%;background:#f59e0b;width:0}
+button{font:600 12px system-ui;border:1px solid var(--bd);background:var(--pn);color:var(--tx);padding:6px 9px;border-radius:8px;cursor:pointer}
+button:hover{border-color:var(--ac)}
+#log{height:110px;overflow:auto;font:11px ui-monospace,Menlo,monospace;color:var(--mu)}
+#pipbox{position:absolute;right:14px;bottom:14px;width:260px;height:195px;border:2px solid #dc2626;border-radius:10px;pointer-events:none;overflow:hidden}
+#pipbox span{position:absolute;top:3px;left:6px;font:700 10px system-ui;color:#34d399;text-shadow:0 0 3px #000}
+@media(max-width:800px){body{flex-direction:column}#panel{width:auto;height:38%;border-left:0;border-top:1px solid var(--bd)}}
+</style></head><body>
+<div id="view">
+ <div class="hud" style="top:10px;left:10px">🏆 <b id="sc">0</b> pts · tombamentos <b id="tp">0</b> · carga <b id="iv">0/4</b></div>
+ <div class="hud" style="top:10px;right:10px">X <b id="hx">0</b> Y <b id="hy">0</b> θ <b id="hh">0</b>° · lançador <b id="hp">50</b>° · potência <b id="hw">20</b></div>
+ <div class="hud" style="bottom:14px;left:10px;line-height:1.6">W/S mover · A/D girar · <b>E</b> (segurar) intake · <b>Espaço</b> lançar<br>Z/X ou ↑/↓ ângulo · R/F potência · arrastar = órbita · roda = zoom</div>
+ <div id="pipbox"><span>CÂMERA DO ROBÔ</span><canvas id="ov" width="260" height="195" style="position:absolute;inset:0"></canvas></div>
+</div>
+<div id="panel">
+ <div class="card"><div class="row"><button id="bI">Intake: off</button><button id="bL">Lançar</button><button id="bC">Câmera: órbita</button></div><div class="row" style="margin-top:6px"><button id="bR">Reset robô</button><button id="bB">Reset bolas</button></div></div>
+ <div class="card"><h3>Inventário (máx. 4)</h3><div class="slots" id="slots"></div></div>
+ <div class="card"><h3>Colmeia · peso nos cestos (limite 4,8)</h3>
+  <div class="row"><span>Cesto A (perto)</span><span id="lt">0N 0P</span></div><div class="bar"><i id="lb"></i></div>
+  <div class="row"><span>Cesto B (longe)</span><span id="rt">0N 0P</span></div><div class="bar"><i id="rb"></i></div>
+  <div style="font-size:11px;color:var(--mu)">Pólen (amarela) pesa 0,6 · Néctar (vermelha) pesa 1,0. A colmeia começa tombada e vira quando o cesto de cima fica 4,8 mais pesado que o de baixo (3N+3P ou 8P).</div></div>
+ <div class="card"><h3>AprilTags (cestos da colmeia)</h3><div id="tg" style="font-size:12px;color:var(--mu)">Nenhuma tag visível</div></div>
+ <div class="card"><h3>Eventos</h3><div id="log"></div></div>
+</div>
+<script>
+const T=THREE,$=id=>document.getElementById(id);
+const G=32.2,R=.28,F=6,PH=2.6,HW=.8,CX=2.1,FL=.12,TOP=1.1,MAXT=.48,THR=4.8,WT={N:1,P:.6},TS=.33;
+// ===== CONFIGURAÇÃO (ajuste aqui) =====
+const HX=0;             // posição X da colmeia (0 = centro da arena, como no vídeo)
+const FEETL=[[-1.3,-1.1],[-1.3,1.1],[1.3,-1.1],[1.3,1.1]]; // pés do cavalete (x,z locais): só 4 pontos no chão
+const START=-1;         // lado que começa tombado: -1 = cesto B (longe) desce · +1 = cesto A (perto) desce
+const TAG_SIDE=1;       // face dos cestos com tags: +1 = voltada ao centro da arena · -1 = voltada à parede
+const TAG_IDS=[[1,2],[3,4]]; // IDs das tags: [cesto A],[cesto B]
+const POLLEN=[[-5.6,-4],[-5.6,-3.4],[-5.6,-2.8],[-5.6,-2.2],[-5.4,5.6],[-4.8,5.6],[-4.2,5.6],[-3.6,5.6]]; // amarelas (zona vermelha)
+const NECTAR=[[-5.6,-1.2],[-5.6,-.6],[-5.6,0],[-5.6,.6]]; // vermelhas (POSIÇÃO PROVISÓRIA)
+// ======================================
+const view=$('view');
+let scene,cam,ren,pipCam,robot,barrel,roller,beam,traj,hv;
+const flaps=[],flapA=[0,0],balls=[],tags=[],keys={};
+const S={x:0,z:4.6,h:0,v:0,pitch:50,power:20,inv:[],score:0,tips:0,btn:false,th:START*MAXT,om:0,dir:START,cnt:[{n:0,p:0,w:0},{n:0,p:0,w:0}],cam:{m:0,az:0,el:.75,d:17}};
+const log=m=>{const l=$('log'),d=document.createElement('div');d.textContent=m;l.appendChild(d);while(l.children.length>40)l.firstChild.remove();l.scrollTop=1e9};
+const std=(c,m=.2,r=.5)=>new T.MeshStandardMaterial({color:c,metalness:m,roughness:r});
+function box(w,h,l,mat,x,y,z,par,sh=true){const m=new T.Mesh(new T.BoxGeometry(w,h,l),mat);m.position.set(x,y,z);m.castShadow=sh;m.receiveShadow=true;(par||scene).add(m);return m}
+function tex(w,h,fn){const c=document.createElement('canvas');c.width=w;c.height=h;fn(c.getContext('2d'),w,h);const t=new T.CanvasTexture(c);t.encoding=T.sRGBEncoding;t.anisotropy=8;return t}
+
+function build(){
+ scene=new T.Scene();scene.background=new T.Color(0x0b0d12);scene.fog=new T.Fog(0x0b0d12,28,60);
+ ren=new T.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));
+ ren.outputEncoding=T.sRGBEncoding;ren.toneMapping=T.ACESFilmicToneMapping;ren.toneMappingExposure=1.05;
+ ren.shadowMap.enabled=true;ren.shadowMap.type=T.PCFSoftShadowMap;view.prepend(ren.domElement);
+ cam=new T.PerspectiveCamera(48,1,.1,120);
+ scene.add(new T.HemisphereLight(0xbcd0ff,0x2b2b33,.75));
+ const sun=new T.DirectionalLight(0xfff1dd,1.25);sun.position.set(8,18,10);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+ Object.assign(sun.shadow.camera,{left:-9,right:9,top:9,bottom:-9,near:1,far:50});sun.shadow.bias=-.0004;scene.add(sun);
+ const rim=new T.DirectionalLight(0x6d8cff,.4);rim.position.set(-10,8,-10);scene.add(rim);
+ // piso: 6x6 placas de 2 ft + zonas vermelhas (coordenadas: x direita, z para baixo)
+ const out=new T.Mesh(new T.PlaneGeometry(120,120),std(0x14161b,0,1));out.rotation.x=-Math.PI/2;out.position.y=-.02;out.receiveShadow=true;scene.add(out);
+ const ft=tex(1024,1024,(g,w,h)=>{const u=w/6,X=x=>(x+F)/12*w,Z=z=>(z+F)/12*h;
+  for(let i=0;i<6;i++)for(let j=0;j<6;j++){g.fillStyle=(i+j)%2?'#7a808c':'#6f7581';g.fillRect(i*u,j*u,u,u)}
+  for(let k=0;k<6000;k++){g.fillStyle='rgba(255,255,255,'+Math.random()*.04+')';g.fillRect(Math.random()*w,Math.random()*h,2,2)}
+  g.strokeStyle='#4b5059';g.lineWidth=3;for(let i=0;i<=6;i++){g.beginPath();g.moveTo(i*u,0);g.lineTo(i*u,h);g.moveTo(0,i*u);g.lineTo(w,i*u);g.stroke()}
+  g.strokeStyle='#ef4444';g.lineWidth=6;
+  g.strokeRect(X(-6)+3,Z(-4.3),X(-5.1)-X(-6),Z(-1.9)-Z(-4.3));
+  g.strokeRect(X(-6)+3,Z(5.2),X(-3.9)-X(-6),Z(6)-Z(5.2)-3)});
+ const fl=new T.Mesh(new T.PlaneGeometry(12,12),new T.MeshStandardMaterial({map:ft,roughness:.8}));fl.rotation.x=-Math.PI/2;fl.receiveShadow=true;scene.add(fl);
+ const glass=new T.MeshStandardMaterial({color:0xcfe3ff,transparent:true,opacity:.14,roughness:.1,depthWrite:false});
+ [[0,-F,12,.1,1],[0,F,12,.1,1],[-F,0,.1,12,1],[F,0,.1,12,1]].forEach(([x,z,w,l])=>{box(w,1,l,glass,x,.5,z,null,false);box(w,.08,l,std(0x94a3b8,.8,.3),x,1.02,z)});
+ hive();balls0();robotBuild();
+ flapA[0]=S.dir>0?1.65:0;flapA[1]=S.dir<0?1.65:0;
+ const tg=new T.BufferGeometry();tg.setAttribute('position',new T.BufferAttribute(new Float32Array(60*3),3));
+ traj=new T.Line(tg,new T.LineBasicMaterial({color:0x34d399,transparent:true,opacity:.8}));traj.frustumCulled=false;scene.add(traj);
+}
+
+// Colmeia: modelada no referencial local (viga ao longo de X local) e girada 90° para ficar ao longo de Z da arena
+function hive(){
+ const red=std(0xdc2626,.3,.45),metal=std(0xcbd5e1,.9,.25),dark=std(0x26262b,.6,.4),alu=std(0xd4d4d8,.85,.3);
+ hv=new T.Group();hv.position.set(HX,0,0);hv.rotation.y=Math.PI/2;scene.add(hv);
+ // base: cavalete aberto em pirâmide (4 pernas finas do eixo até o chão), SEM laje/placa/travessas
+ const blk=std(0x15151a,.5,.5);
+ FEETL.forEach(([lx,lz])=>{const A=new T.Vector3(0,PH,lz>0?.55:-.55),d=new T.Vector3(lx,0,lz).sub(A),len=d.length();
+  const l=new T.Mesh(new T.BoxGeometry(.09,len,.09),blk);l.position.copy(A).addScaledVector(d,.5);
+  l.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),d.clone().normalize());l.castShadow=true;hv.add(l)});
+ const hub=new T.Mesh(new T.CylinderGeometry(.14,.14,1.5,20),blk);hub.rotation.x=Math.PI/2;hub.position.y=PH;hub.castShadow=true;hv.add(hub);
+ beam=new T.Group();beam.position.set(0,PH,0);hv.add(beam);
+ box(6.4,.1,.3,alu,0,-.02,0,beam);
+ const gm=new T.MeshStandardMaterial({color:0xff7a7a,transparent:true,opacity:.2,roughness:.05,depthWrite:false,side:T.DoubleSide});
+ const em=new T.LineBasicMaterial({color:0xffc2c2,transparent:true,opacity:.75}),H=TOP-FL;
+ const pane=(w,h,l,x,y,z,par)=>{const g=new T.BoxGeometry(w,h,l),m=new T.Mesh(g,gm);m.position.set(x,y,z);m.renderOrder=2;m.add(new T.LineSegments(new T.EdgesGeometry(g),em));par.add(m);return m};
+ [-1,1].forEach((s,i)=>{
+  const b=new T.Group();b.position.x=s*CX;beam.add(b);
+  box(2*HW,.09,2*HW,std(0x7f1d1d,.3,.5),0,FL-.045,0,b);
+  pane(.04,H,2*HW,-s*HW,FL+H/2,0,b);pane(2*HW,H,.04,0,FL+H/2,HW,b);pane(2*HW,H,.04,0,FL+H/2,-HW,b);
+  box(2*HW,.07,.07,red,0,TOP,HW,b);box(2*HW,.07,.07,red,0,TOP,-HW,b);box(.07,.07,2*HW,red,-s*HW,TOP,0,b);
+  const p=new T.Group();p.position.set(s*HW,FL,0);b.add(p);pane(.04,H,2*HW,0,H/2,0,p);box(.07,.07,2*HW,red,0,H,0,p);flaps[i]=p;
+  // placa de alumínio com 2 AprilTags lado a lado, presa ao cesto (acompanha a inclinação)
+  box(1.5,.8,.03,alu,0,FL+.5,TAG_SIDE*(HW+.015),b);
+  [-1,1].forEach((k,j)=>{const id=TAG_IDS[i][j];
+   const t=tex(128,128,(g,w,h)=>{g.fillStyle='#fff';g.fillRect(0,0,w,h);const n=w/6;g.fillStyle='#000';g.fillRect(n*.5,n*.5,n*5,n*5);let q=id*9301+49297;
+    for(let a=1;a<5;a++)for(let c=1;c<5;c++){q=(q*233280+11)%49297;g.fillStyle=q%2?'#fff':'#000';g.fillRect(a*n,c*n,n,n)}});
+   const m=new T.Mesh(new T.PlaneGeometry(2*TS,2*TS),new T.MeshBasicMaterial({map:t}));
+   m.position.set(k*(TS+.04),FL+.5,TAG_SIDE*(HW+.04));if(TAG_SIDE<0)m.rotation.y=Math.PI;b.add(m);tags.push({id,m})});
+ });
+}
+
+function mkBall(t,x,z){const m=new T.Mesh(mkBall.g||(mkBall.g=new T.SphereGeometry(R,24,18)),new T.MeshStandardMaterial({color:t=='P'?0xfacc15:0xef4444,roughness:.3,metalness:.05}));
+ m.castShadow=true;m.position.set(x,R,z);scene.add(m);balls.push({m,p:m.position,v:new T.Vector3(),t,held:false,x0:x,z0:z})}
+function balls0(){POLLEN.forEach(([x,z])=>mkBall('P',x,z));NECTAR.forEach(([x,z])=>mkBall('N',x,z))}
+
+function robotBuild(){
+ robot=new T.Group();scene.add(robot);
+ const dk=std(0x1f1f23,.7,.35),rd=std(0xdc2626,.4,.4),al=std(0x9ca3af,.9,.3);
+ box(1.3,.14,1.4,dk,0,.34,0,robot);box(.08,.32,1.4,rd,-.66,.4,0,robot);box(.08,.32,1.4,rd,.66,.4,0,robot);
+ box(1.15,.04,1.2,new T.MeshStandardMaterial({color:0x93c5fd,transparent:true,opacity:.35}),0,.62,.05,robot);
+ [[-.5,-.5],[.5,-.5],[-.5,.5],[.5,.5]].forEach(([x,z])=>box(.05,.28,.05,al,x,.48,z*1.0,robot));
+ box(.35,.12,.25,std(0x111,.5,.5),.3,.7,.35,robot);box(.3,.1,.2,std(0x2563eb,.3,.5),-.3,.7,.4,robot);
+ [[-.7,-.45],[.7,-.45],[-.7,.45],[.7,.45]].forEach(([x,z])=>{const w=new T.Mesh(new T.CylinderGeometry(.25,.25,.22,24),std(0x2e2e34,.2,.8));w.rotation.z=Math.PI/2;w.position.set(x,.25,z);w.castShadow=true;robot.add(w);
+  const h=new T.Mesh(new T.CylinderGeometry(.1,.1,.24,12),al);h.rotation.z=Math.PI/2;h.position.set(x,.25,z);robot.add(h)});
+ barrel=new T.Group();barrel.position.set(0,.55,-.1);robot.add(barrel);
+ const tube=new T.Mesh(new T.CylinderGeometry(.2,.22,.9,24),std(0xdc2626,.8,.25));tube.rotation.x=Math.PI/2;tube.position.z=-.45;tube.castShadow=true;barrel.add(tube);
+ const ring=new T.Mesh(new T.TorusGeometry(.2,.04,10,24),al);ring.position.z=-.9;barrel.add(ring);
+ roller=new T.Mesh(new T.CylinderGeometry(.12,.12,1.05,16),std(0xfacc15,.3,.6));roller.rotation.z=Math.PI/2;roller.position.set(0,.17,-.85);roller.castShadow=true;robot.add(roller);
+ pipCam=new T.PerspectiveCamera(62,4/3,.1,40);pipCam.position.set(-.35,1.1,-.45);pipCam.rotation.x=-.12;robot.add(pipCam);
+ box(.14,.1,.14,dk,-.35,1.1,-.4,robot);
+}
+
+function sphereBox(b,x0,y0,z0,x1,y1,z1){const p=b.p,cx=Math.max(x0,Math.min(x1,p.x)),cy=Math.max(y0,Math.min(y1,p.y)),cz=Math.max(z0,Math.min(z1,p.z));
+ let dx=p.x-cx,dy=p.y-cy,dz=p.z-cz,d=Math.hypot(dx,dy,dz);if(d>=R)return;if(d<1e-6){dx=0;dy=1;dz=0;d=1}
+ const nx=dx/d,ny=dy/d,nz=dz/d;p.set(cx+nx*R,cy+ny*R,cz+nz*R);const vn=b.v.x*nx+b.v.y*ny+b.v.z*nz;
+ if(vn<0){const k=-1.35*vn;b.v.x+=nx*k;b.v.y+=ny*k;b.v.z+=nz*k}
+ if(ny>.5){if(Math.abs(b.v.y)<1.5)b.v.y=Math.max(0,b.v.y);b.v.x*=.985;b.v.z*=.985}}
+
+// Cesto da colmeia: colisão calculada no referencial local da gangorra (gira junto com ela)
+function basket(b,i){
+ const sd=i?1:-1,p=b.p,c=Math.cos(S.th),s=Math.sin(S.th),py=p.y-PH;
+ let ly=-p.x*s+py*c,lx=p.x*c+py*s,vx=b.v.x*c+b.v.y*s,vy=-b.v.x*s+b.v.y*c,vz=b.v.z,dx=lx-sd*CX,dz=p.z,ch=0;
+ if(!(ly<TOP&&ly>-.07-R&&Math.abs(dx)<HW+R&&Math.abs(dz)<HW+R))return;
+ const open=flapA[i]>.7,inn=Math.abs(dx)<=HW&&Math.abs(dz)<=HW;
+ if(inn){
+  if(ly<FL-.05){ly=-.07-R;if(vy>0)vy*=-.3;ch=1}
+  else{
+   const o=dx*sd,ob=open?9:HW-R;
+   if(o>ob){dx=sd*ob;if(vx*sd>0)vx*=-.4;ch=1}
+   if(-o>HW-R){dx=-sd*(HW-R);if(-vx*sd>0)vx*=-.4;ch=1}
+   if(Math.abs(dz)>HW-R){dz=Math.sign(dz)*(HW-R);if(vz*dz>0)vz*=-.4;ch=1}
+   if(ly<FL+R){ly=FL+R;if(vy<0)vy*=-.35;vx*=.99;vz*=.99;ch=1}
+   S.cnt[i][b.t=='N'?'n':'p']++}
+ }else if(ly>=FL-.05&&!(open&&dx*sd>HW)){
+  if(Math.abs(dx)-HW>Math.abs(dz)-HW){dx=Math.sign(dx)*(HW+R);if(vx*dx<0)vx*=-.4}else{dz=Math.sign(dz)*(HW+R);if(vz*dz<0)vz*=-.4}ch=1}
+ if(ch){lx=sd*CX+dx;p.set(lx*c-ly*s,PH+lx*s+ly*c,dz);b.v.set(vx*c-vy*s,vx*s+vy*c,vz)}
+}
+// converte mundo -> referencial local da colmeia (lx=-z, lz=x-HX), aplica os cestos e volta
+const PX={p:new T.Vector3(),v:new T.Vector3(),t:'N'};
+function hiveCol(b){const p=b.p;if(Math.abs(p.x-HX)>HW+R+.1||Math.abs(p.z)>CX+HW+R+.1)return;
+ PX.p.set(-p.z,p.y,p.x-HX);PX.v.set(-b.v.z,b.v.y,b.v.x);PX.t=b.t;
+ basket(PX,0);basket(PX,1);
+ p.set(HX+PX.p.z,PX.p.y,-PX.p.x);b.v.set(PX.v.z,PX.v.y,-PX.v.x)}
+
+function stepBalls(dt){
+ S.cnt=[{n:0,p:0,w:0},{n:0,p:0,w:0}];const L=F-R,fx=-Math.sin(S.h),fz=-Math.cos(S.h),intake=keys.KeyE||S.btn;
+ for(const b of balls){if(b.held)continue;const p=b.p;
+  b.v.y-=G*dt;p.addScaledVector(b.v,dt);
+  if(p.y<R){p.y=R;b.v.y=b.v.y<-1.5?-b.v.y*.45:0;const f=Math.exp(-1.3*dt);b.v.x*=f;b.v.z*=f;if(Math.hypot(b.v.x,b.v.z)<.04)b.v.x=b.v.z=0}
+  if(Math.abs(p.x)>L){p.x=Math.sign(p.x)*L;b.v.x*=-.5}if(Math.abs(p.z)>L){p.z=Math.sign(p.z)*L;b.v.z*=-.5}
+  for(const [lx,lz] of FEETL){const fx=HX+lz,fz=-lx;sphereBox(b,fx-.1,0,fz-.1,fx+.1,.5,fz+.1)}hiveCol(b);
+  if(p.y<.7){const rx=p.x-S.x,rz=p.z-S.z,fw=rx*fx+rz*fz,lat=Math.abs(rx*fz-rz*fx);
+   if(intake&&S.inv.length<4&&fw>.55&&fw<1.5&&lat<.7){b.held=true;b.m.visible=false;S.inv.push(b);log('Intake coletou '+(b.t=='N'?'Néctar':'Pólen'));slots();continue}
+   const d=Math.hypot(rx,rz);if(d<.85+R&&d>1e-4){p.x=S.x+rx/d*(.85+R);p.z=S.z+rz/d*(.85+R);b.v.x+=rx/d*Math.abs(S.v)*.4;b.v.z+=rz/d*Math.abs(S.v)*.4}}
+ }
+ for(let i=0;i<balls.length;i++){const a=balls[i];if(a.held)continue;for(let j=i+1;j<balls.length;j++){const c=balls[j];if(c.held)continue;
+  const dx=a.p.x-c.p.x,dy=a.p.y-c.p.y,dz=a.p.z-c.p.z,d2=dx*dx+dy*dy+dz*dz;if(d2>=4*R*R||d2<1e-8)continue;
+  const d=Math.sqrt(d2),nx=dx/d,ny=dy/d,nz=dz/d,ov=(2*R-d)/2;a.p.x+=nx*ov;a.p.y+=ny*ov;a.p.z+=nz*ov;c.p.x-=nx*ov;c.p.y-=ny*ov;c.p.z-=nz*ov;
+  const vn=(a.v.x-c.v.x)*nx+(a.v.y-c.v.y)*ny+(a.v.z-c.v.z)*nz;if(vn<0){const k=-1.4*vn/2;a.v.x+=nx*k;a.v.y+=ny*k;a.v.z+=nz*k;c.v.x-=nx*k;c.v.y-=ny*k;c.v.z-=nz*k}}}
+}
+
+// A colmeia fica tombada (S.dir = lado que desce) e só vira quando o outro cesto passa o de baixo em THR
+function hiveLogic(dt){
+ const l=S.cnt[0],r=S.cnt[1];l.w=l.n*WT.N+l.p*WT.P;r.w=r.n*WT.N+r.p*WT.P;const net=l.w-r.w;
+ if(Math.abs(net)>=THR-.01&&Math.sign(net)!==S.dir){S.dir=Math.sign(net);S.score+=20;S.tips++;log('💥 Colmeia tombou: cesto '+(net>0?'A (perto)':'B (longe)')+' desceu (+20 pts)')}
+ const tg=S.dir*MAXT;S.om+=(70*(tg-S.th)-10*S.om)*dt;S.th=Math.max(-MAXT*1.05,Math.min(MAXT*1.05,S.th+S.om*dt));beam.rotation.z=S.th;
+ for(let i=0;i<2;i++){const want=((S.dir==1)==(i==0))?1.65:0;flapA[i]+=(want-flapA[i])*Math.min(1,6*dt);flaps[i].rotation.z=-(i?1:-1)*flapA[i]}
+}
+
+function moveRobot(dt){
+ const t=(keys.KeyW?1:0)-(keys.KeyS?1:0),r=(keys.KeyA?1:0)-(keys.KeyD?1:0);
+ S.v+=(t*7-S.v)*Math.min(1,7*dt);S.h+=r*2.4*dt;S.x+=-Math.sin(S.h)*S.v*dt;S.z+=-Math.cos(S.h)*S.v*dt;
+ const cx=Math.max(HX-1.1,Math.min(HX+1.1,S.x)),cz=Math.max(-1.3,Math.min(1.3,S.z));let dx=S.x-cx,dz=S.z-cz,d=Math.hypot(dx,dz);
+ if(d<.85){if(d<1e-6){dx=0;dz=1;d=1}S.x=cx+dx/d*.85;S.z=cz+dz/d*.85}
+ S.x=Math.max(-F+.8,Math.min(F-.8,S.x));S.z=Math.max(-F+.8,Math.min(F-.8,S.z));
+ const pd=35*dt,wd=8*dt;
+ if(keys.KeyZ||keys.ArrowUp)S.pitch=Math.min(75,S.pitch+pd);if(keys.KeyX||keys.ArrowDown)S.pitch=Math.max(15,S.pitch-pd);
+ if(keys.KeyR)S.power=Math.min(30,S.power+wd);if(keys.KeyF)S.power=Math.max(10,S.power-wd);
+ robot.position.set(S.x,0,S.z);robot.rotation.y=S.h;barrel.rotation.x=S.pitch*Math.PI/180;
+ if(keys.KeyE||S.btn)roller.rotation.x+=dt*18;
+}
+function launchDir(){const ph=S.pitch*Math.PI/180;return new T.Vector3(-Math.sin(S.h)*Math.cos(ph),Math.sin(ph),-Math.cos(S.h)*Math.cos(ph))}
+function spawnPos(d){return new T.Vector3(S.x-Math.sin(S.h)*.1+d.x*.95,.55+d.y*.95,S.z-Math.cos(S.h)*.1+d.z*.95)}
+function launch(){if(!S.inv.length){log('⚠️ Sem bolas no inventário');return}
+ const b=S.inv.pop(),d=launchDir();b.held=false;b.m.visible=true;b.p.copy(spawnPos(d));b.v.copy(d).multiplyScalar(S.power);slots();
+ log('🚀 Lançou '+(b.t=='N'?'Néctar':'Pólen')+' a '+Math.round(S.pitch)+'°')}
+function trajectory(){const d=launchDir(),p=spawnPos(d),v=d.clone().multiplyScalar(S.power),a=traj.geometry.attributes.position;let n=0;
+ for(;n<60;n++){a.setXYZ(n,p.x,p.y,p.z);v.y-=G*.04;p.addScaledVector(v,.04);if(p.y<R)break}
+ for(let k=n;k<60;k++)a.setXYZ(k,p.x,Math.max(p.y,R),p.z);a.needsUpdate=true}
+
+function vision(){
+ const ctx=$('ov').getContext('2d'),W=260,H=195;ctx.clearRect(0,0,W,H);pipCam.updateMatrixWorld(true);
+ const cp=new T.Vector3().setFromMatrixPosition(pipCam.matrixWorld),cd=pipCam.getWorldDirection(new T.Vector3()),out=[];
+ tags.forEach(t=>{t.m.updateMatrixWorld();const c=new T.Vector3().setFromMatrixPosition(t.m.matrixWorld),n=new T.Vector3(0,0,1).transformDirection(t.m.matrixWorld);
+  const to=cp.clone().sub(c),d=to.length();to.normalize();const cn=c.clone().project(pipCam);
+  if(n.dot(to)<.25||d>14||cn.z>1||Math.abs(cn.x)>1||Math.abs(cn.y)>1)return;
+  const pts=[[-1,1],[1,1],[1,-1],[-1,-1]].map(([a,b])=>{const v=new T.Vector3(a*TS,b*TS,0).applyMatrix4(t.m.matrixWorld).project(pipCam);return[(v.x+1)/2*W,(1-v.y)/2*H]});
+  ctx.strokeStyle='#34d399';ctx.lineWidth=2;ctx.beginPath();pts.forEach((q,i)=>i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]));ctx.closePath();ctx.stroke();
+  ctx.fillStyle='#34d399';ctx.font='bold 12px system-ui';ctx.fillText('ID '+t.id,pts[0][0],pts[0][1]-4);
+  const ang=Math.atan2(cd.x*(c.z-cp.z)-cd.z*(c.x-cp.x),cd.x*(c.x-cp.x)+cd.z*(c.z-cp.z))*180/Math.PI;out.push({id:t.id,d,ang})});
+ $('tg').innerHTML=out.length?out.map(o=>`<div class="row"><b style="color:var(--ok)">Tag #${o.id}</b><span>${o.d.toFixed(1)} ft · desvio ${o.ang.toFixed(0)}°</span></div>`).join(''):'Nenhuma tag visível';
+}
+
+function slots(){$('slots').innerHTML=[0,1,2,3].map(i=>{const b=S.inv[i];return b?`<div class="slot" style="border:0;background:${b.t=='P'?'#facc15;color:#18181b':'#ef4444;color:#fff'};font-weight:700">${b.t=='N'?'Néctar':'Pólen'}</div>`:'<div class="slot">vazio</div>'}).join('')}
+function ui(){
+ $('sc').textContent=S.score;$('tp').textContent=S.tips;$('iv').textContent=S.inv.length+'/4';
+ $('hx').textContent=S.x.toFixed(1);$('hy').textContent=(-S.z).toFixed(1);$('hh').textContent=Math.round(S.h*180/Math.PI);$('hp').textContent=Math.round(S.pitch);$('hw').textContent=S.power.toFixed(0);
+ const l=S.cnt[0],r=S.cnt[1];$('lt').textContent=`${l.n}N ${l.p}P · ${l.w.toFixed(1)}`;$('rt').textContent=`${r.n}N ${r.p}P · ${r.w.toFixed(1)}`;
+ $('lb').style.width=Math.min(100,l.w/THR*100)+'%';$('rb').style.width=Math.min(100,r.w/THR*100)+'%';
+ $('bI').textContent='Intake: '+(S.btn?'on':'off')}
+function camUpdate(){const c=S.cam;let tx=0,ty=1.2,tz=0;if(c.m){tx=S.x;tz=S.z;ty=.8}const az=c.az+(c.m?S.h:0);
+ cam.position.set(tx+Math.sin(az)*Math.cos(c.el)*c.d,ty+Math.sin(c.el)*c.d,tz+Math.cos(az)*Math.cos(c.el)*c.d);cam.lookAt(tx,ty,tz)}
+function resize(){const w=view.clientWidth,h=view.clientHeight;ren.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}
+function reset(){S.x=0;S.z=4.6;S.h=0;S.v=0}
+function resetBalls(){S.inv=[];S.dir=START;S.th=START*MAXT;S.om=0;S.score=0;S.tips=0;balls.forEach(b=>{b.held=false;b.m.visible=true;b.p.set(b.x0,R,b.z0);b.v.set(0,0,0)});slots()}
+
+let last=performance.now();
+function loop(t){requestAnimationFrame(loop);const dt=Math.min(.033,(t-last)/1000);last=t;
+ moveRobot(dt);hiveLogic(dt);for(let i=0;i<3;i++)stepBalls(dt/3);trajectory();ui();camUpdate();
+ const w=view.clientWidth,h=view.clientHeight;ren.setScissorTest(false);ren.setViewport(0,0,w,h);ren.render(scene,cam);
+ ren.setScissorTest(true);ren.setViewport(w-274,14,260,195);ren.setScissor(w-274,14,260,195);traj.visible=false;ren.render(scene,pipCam);traj.visible=true;
+ ren.setScissorTest(false);vision()}
+
+build();resize();slots();log('Simulador BioBuzz pronto. Colete com E e lance com Espaço.');requestAnimationFrame(loop);
+addEventListener('resize',resize);
+addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();if(e.code=='Space'&&!e.repeat)launch()});
+addEventListener('keyup',e=>keys[e.code]=false);
+let drag=null;const cv=ren.domElement;
+cv.addEventListener('pointerdown',e=>{drag=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)});
+cv.addEventListener('pointerup',()=>drag=null);
+cv.addEventListener('pointermove',e=>{if(!drag)return;S.cam.az-=(e.clientX-drag[0])*.005;S.cam.el=Math.max(.1,Math.min(1.45,S.cam.el+(e.clientY-drag[1])*.005));drag=[e.clientX,e.clientY]});
+cv.addEventListener('wheel',e=>{e.preventDefault();S.cam.d=Math.max(5,Math.min(30,S.cam.d*(1+e.deltaY*.001)))},{passive:false});
+$('bI').onclick=()=>S.btn=!S.btn;$('bL').onclick=launch;$('bR').onclick=reset;$('bB').onclick=resetBalls;
+$('bC').onclick=()=>{S.cam.m^=1;S.cam.d=S.cam.m?9:17;$('bC').textContent='Câmera: '+(S.cam.m?'seguir':'órbita')};
+</script></body></html>
