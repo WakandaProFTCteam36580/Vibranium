@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 
 @TeleOp(name = "TeleOpTeste")
 
@@ -21,7 +22,7 @@ public class Teleoperado extends OpMode {
 
     CRServo servoit_esq; //Porta de servos 0 (Speed)
     CRServo servoit_dir; //Porta de servos 1 (Speed)
-    CRServo servo_lift; //Porta de servos 2 (Torque)
+    Servo servo_lift; //Porta de servos 2 (Torque)
     Servo servo_catraca; //Porta de servo 3 (Torque)
 
     @Override
@@ -40,16 +41,18 @@ public class Teleoperado extends OpMode {
         //IMPORTANDO AS VARIÁVEIS DOS SERVOS
         servoit_dir = hardwareMap.get(CRServo.class, "servoit_dir");
         servoit_esq = hardwareMap.get(CRServo.class, "servoit_esq");
-        servo_lift = hardwareMap.get(CRServo.class, "servo_lift");
+        servo_lift = hardwareMap.get(Servo.class, "servo_lift");
         servo_catraca = hardwareMap.get(Servo.class, "servo_catraca");
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS SERVOS
         ((CRServoImplEx) servoit_dir).setPwmRange(new PwmControl.PwmRange(500, 2500));
         ((CRServoImplEx) servoit_esq).setPwmRange(new PwmControl.PwmRange(500, 2500));
-    
+        ((ServoImplEx) servo_lift).setPwmRange (new PwmControl.PwmRange(500,2500));
+        ((ServoImplEx)servo_catraca).setPwmRange (new PwmControl.PwmRange (500,2500));
+
         //INVERTENDO SENTIDO DOS SERVOS
         servoit_dir.setDirection(CRServo.Direction.REVERSE);
-        servo_lift.setDirection(CRServo.Direction.REVERSE);
+        servo_lift.setDirection(Servo.Direction.REVERSE);
         servo_catraca.setDirection(Servo.Direction.REVERSE);
 
         //MENSAGEM DE INICIALIZAÇÃO
