@@ -14,6 +14,7 @@
 
   /* Acento */
   --wp-red: #8b1c2b;
+  --cor-equipe: var(--wp-red);
   --wp-red-deep: #6d1420;
   --wp-red-glow: rgba(139, 28, 43, 0.35);
 
@@ -141,8 +142,6 @@ body {
 }
 
 /* Cor da equipe — vinho do escudo (#8b1c2b), reutilizando token existente */
---cor-equipe: var(--wp-red);
-
 /* TechText — destaque tecnológico em títulos (agora em vinho da equipe) */
 .wp-tech-text {
   color: #b3243a;
