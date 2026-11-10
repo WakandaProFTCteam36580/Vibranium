@@ -171,3 +171,11 @@ body {
     0 0 10px rgba(179, 36, 58, 0.5),
     0 0 20px rgba(139, 28, 43, 0.4);
 }
+
+/* Número grande da equipe em vinho com brilho — faixa "NÚMERO DE EQUIPE" */
+.numero-equipe {
+  color: #b3243a;
+  text-shadow:
+    0 0 10px rgba(179, 36, 58, 0.5),
+    0 0 20px rgba(139, 28, 43, 0.4);
+}

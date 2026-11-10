@@ -209,7 +209,7 @@ export default function TeamPage() {
 
       <section className="border-y border-[var(--wp-edge)] bg-[var(--wp-coal)] py-14">
         <div className="mx-auto flex max-w-7xl flex-col items-start gap-6 px-5 lg:flex-row lg:items-center lg:gap-12 lg:px-8">
-          <span className="font-display text-6xl font-extrabold text-[var(--wp-gold-soft)] lg:text-8xl">
+          <span className="font-display text-6xl font-extrabold numero-equipe lg:text-8xl">
             {siteConfig.numeroFtc}
           </span>
           <div>
