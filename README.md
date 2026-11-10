@@ -2,6 +2,8 @@
 
 Site público premium e intranet de gestão da **Wakanda Pro 36580**, equipe de robótica educacional da Escola SESI Milton Santos (Camaçari/BA), em estreia na FIRST Tech Challenge — temporada BIOBUZZ 2026–27. Robô: **Vibranium** (imagem secreta até autorização da equipe).
 
+> **Repositório da equipe:** https://github.com/WakandaProFTCteam36580/Vibranium (branch `migracao-site`)
+>
 > **Aviso de identidade:** a referência a Wakanda/Pantera Negra é *inspiração de ficção* (afrofuturismo, protagonismo). Não há vínculo com a Marvel. O robô "Vibranium" é uma homenagem de equipe, sem relação comercial.
 
 ## Stack
