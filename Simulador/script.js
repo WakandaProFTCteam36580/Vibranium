@@ -123,7 +123,7 @@ const T = THREE
                 rim.position.set(-10, 8, -10);
                 scene.add(rim);
                 // piso
-                const out = new T.Mesh(new T.PlaneGeometry(120,120),std(0x55575b, 0, 1));
+               const out = new T.Mesh(new T.PlaneGeometry(120,120),std(0x333333, 0, 1));
                 out.rotation.x = -Math.PI / 2;
                 out.position.y = -.02;
                 out.receiveShadow = true;
@@ -132,7 +132,7 @@ const T = THREE
                     const u = w / 12;
                     for (let i = 0; i < 12; i++)
                         for (let j = 0; j < 12; j++) {
-                            g.fillStyle = (i + j) % 2 ? '#b9cad6' : '#b2c4d1';
+                            g.fillStyle = (i + j) % 2 ? '#7d858c' : '#686f75';
                             g.fillRect(i * u, j * u, u, u)
                         }
                     for (let k = 0; k < 5000; k++) {
@@ -205,7 +205,7 @@ const T = THREE
                 const tg = new T.BufferGeometry();
                 tg.setAttribute('position', new T.BufferAttribute(new Float32Array(60 * 3),3));
                 traj = new T.Line(tg,new T.LineBasicMaterial({
-                    color: 0x34d399,
+                    color: 0xff0000,
                     transparent: true,
                     opacity: .8
                 }));
@@ -327,6 +327,7 @@ const T = THREE
                     pane(.04, H, 2 * HW, -s * HW, FL + H / 2, 0, b);
                     pane(2 * HW, H, .04, 0, FL + H / 2, HW, b);
                     pane(2 * HW, H, .04, 0, FL + H / 2, -HW, b);
+                    pane(2 * HW, .04, 2 * HW, 0, TOP, 0, b);
                     const p = new T.Group();
                     p.position.set(s * HW, FL, 0);
                     b.add(p);
