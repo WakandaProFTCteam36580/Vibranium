@@ -22,6 +22,7 @@ public class Teleoperado extends OpMode {
     public Servo servo_catraca; //Porta de servo 1 (Speed)
     public Servo servo_flw; //Porta de servo 2 (Torque)
 
+
     @Override
     public void init() {
         //IMPORTANDO AS VARIÁVEIS DOS SERVOS E DOS MOTORES
@@ -38,7 +39,7 @@ public class Teleoperado extends OpMode {
         //IMPORTANDO AS VARIÁVEIS DOS SERVOS
         servo_lift = hardwareMap.get(Servo.class, "servo_lift");
         servo_catraca = hardwareMap.get(Servo.class, "servo_catraca");
-        servo_flw = hardwareMap.get(Servo.class, "servo_flw");
+        servo_flw = hardwareMap.get(Servo.class,"servo_flw");
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS SERVOS
         ((ServoImplEx) servo_lift).setPwmRange (new PwmControl.PwmRange(500,2500));
@@ -48,7 +49,6 @@ public class Teleoperado extends OpMode {
         //INVERTENDO SENTIDO DOS SERVOS
         servo_lift.setDirection(Servo.Direction.REVERSE);
         servo_catraca.setDirection(Servo.Direction.REVERSE);
-        servo_flw.setDirection(Servo.Direction.REVERSE);
 
         //MENSAGEM DE INICIALIZAÇÃO
         telemetry.addData("Modo teleoperado", "ativo!");
