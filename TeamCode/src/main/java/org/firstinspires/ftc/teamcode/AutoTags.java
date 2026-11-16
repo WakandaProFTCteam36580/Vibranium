@@ -16,6 +16,9 @@ public class AutoTags extends LinearOpMode {
         // Inicializa a câmara passando o hardwareMap e a telemetria
         tagWebCam.init(hardwareMap, telemetry);
 
+        // Otimiza o envio de telemetria para o Driver Hub (evita lag e atualiza fluidamente)
+        telemetry.setMsTransmissionInterval(50);
+
         telemetry.addData("Estado", "Pronto para iniciar");
         telemetry.update();
 
@@ -39,17 +42,19 @@ public class AutoTags extends LinearOpMode {
                 }
             }
 
-            // Se encontrou alguma das tags, mostra os dados dela
+            // Se encontrou alguma das tags, mostra os dados detalhados no Driver Hub
             if (minhaTag != null && minhaTag.ftcPose != null) {
-                telemetry.addData("Tag Encontrada!", "ID: " + idEncontrado);
-                telemetry.addData("Distância (X)", minhaTag.ftcPose.x);
-                telemetry.addData("Distância (Y)", minhaTag.ftcPose.y);
-                telemetry.addData("Distância (Range)", minhaTag.ftcPose.range);
-                telemetry.addData("Ângulo (Bearing)", minhaTag.ftcPose.bearing);
+                telemetry.addData("Status", "TAG ENCONTRADA!");
+                telemetry.addData("ID da Tag", idEncontrado);
+                telemetry.addData("Alcance (Range)", "%.2f cm/pol", minhaTag.ftcPose.range);
+                telemetry.addData("Bearing (Ângulo)", "%.2f deg", minhaTag.ftcPose.bearing);
+                telemetry.addData("Eixo X", "%.2f", minhaTag.ftcPose.x);
+                telemetry.addData("Eixo Y", "%.2f", minhaTag.ftcPose.y);
             } else {
-                telemetry.addData("Estado", "A procurar pelas tags 30 a 33...");
+                telemetry.addData("Status", "A procurar pelas tags (30-33)...");
             }
 
+            // Envia tudo para o ecrã do Driver Hub
             telemetry.update();
         }
 
