@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 
-@TeleOp(name = "TeleOpTeste")
+@TeleOp(name = "Teleoperado")
 
 public class Teleoperado extends OpMode {
 
