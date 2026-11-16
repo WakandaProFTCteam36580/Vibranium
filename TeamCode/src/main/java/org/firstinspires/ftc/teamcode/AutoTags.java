@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.drive.AprilTagWebCam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
-@Autonomous(name="Teste AprilTags", group="Autonomous")
+@Autonomous(name="Teste Tags", group="Autonomous")
 public class AutoTags extends LinearOpMode {
 
     private AprilTagWebCam tagWebCam = new AprilTagWebCam();
