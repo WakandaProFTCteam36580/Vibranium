@@ -2,72 +2,86 @@
 <html lang="pt-BR">
     <head>
         <meta charset="UTF-8">
+        <!-- viewport-fit=cover permite usar a tela toda em celulares com notch -->
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <title>FTC BioBuzz – Simulador 3D</title>
+        <!-- Three.js r128 (biblioteca 3D) carregada do CDN -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
+        <!-- ===== Área da cena 3D (o canvas do Three.js é inserido aqui pelo script) ===== -->
         <div id="view">
+            <!-- HUD superior esquerdo: pontuação, tombamentos, carga do robô e parking -->
             <div class="hud" style="top:10px;left:10px">
                 🏆 <b id="sc">0</b> pts · tombamentos <b id="tp">0</b> · carga <b id="iv">0/4</b> · parking <b id="pk">fora</b>
             </div>
+            <!-- HUD superior direito: posição (X, Y), ângulo do robô, ângulo e potência do lançador -->
             <div class="hud" style="top:10px;right:10px">
                 X <b id="hx">0</b> Y <b id="hy">0</b> θ <b id="hh">0</b>° · lançador <b id="hp">50</b>° · potência <b id="hw">20</b>
             </div>
+            <!-- HUD inferior esquerdo: legenda dos controles de teclado/mouse -->
             <div class="hud" style="bottom:14px;left:10px;line-height:1.6">
                 W/S mover · A/D girar · <b>E</b> (segurar) intake · <b>Espaço</b> lançar<br>Z/X ou ↑/↓ ângulo · R/F potência · arrastar = órbita · roda = zoom
             </div>
+            <!-- Moldura da câmera do robô (picture-in-picture) -->
             <div id="pipbox">
                 <span>CÂMERA DO ROBÔ</span>
+                <!-- Canvas 2D sobreposto: o script desenha aqui os contornos e IDs das AprilTags detectadas -->
                 <canvas id="ov" width="260" height="195" style="position:absolute;inset:0"></canvas>
             </div>
         </div>
 
+        <!-- ===== Painel lateral ===== -->
         <div id="panel">
+            <!-- Botões de controle -->
             <div class="card">
                 <div class="row">
-                    <button id="bI">Intake: off</button>
-                    <button id="bL">Lançar</button>
-                    <button id="bC">Câmera: órbita</button>
+                    <button id="bI">Intake: off</button>   <!-- liga/desliga o intake -->
+                    <button id="bL">Lançar</button>        <!-- lança uma bola do inventário -->
+                    <button id="bC">Câmera: órbita</button> <!-- alterna câmera órbita/seguir -->
                 </div>
                 <div class="row" style="margin-top:6px">
-                    <button id="bR">Reset robô</button>
-                    <button id="bB">Reset bolas</button>
+                    <button id="bR">Reset robô</button>    <!-- volta o robô à posição inicial -->
+                    <button id="bB">Reset bolas</button>   <!-- devolve todas as bolas ao início -->
                 </div>
             </div>
 
+            <!-- Inventário do robô (4 slots preenchidos dinamicamente pelo script) -->
             <div class="card">
                 <h3>Inventário (máx. 4)</h3>
                 <div class="slots" id="slots"></div>
             </div>
 
+            <!-- Células de carga da colmeia: peso de cada lado vs. limite para tombar -->
             <div class="card">
                 <h3>Colmeia · carga das células (limite 0,44 lb)</h3>
                 <div class="row">
                     <span>Esquerdo</span>
-                    <span id="lt">0N 0P</span>
+                    <span id="lt">0N 0P</span>   <!-- contagem de Néctar/Pólen + peso (lado esquerdo) -->
                 </div>
                 <div class="bar">
-                    <i id="lb"></i>
+                    <i id="lb"></i>              <!-- barra de progresso do lado esquerdo -->
                 </div>
                 <div class="row">
                     <span>Direito</span>
-                    <span id="rt">0N 0P</span>
+                    <span id="rt">0N 0P</span>   <!-- idem, lado direito -->
                 </div>
                 <div class="bar">
-                    <i id="rb"></i>
+                    <i id="rb"></i>              <!-- barra de progresso do lado direito -->
                 </div>
                 <div style="font-size:11px;color:var(--mu)">
                     Néctar (vermelha, maior) pesa 0,11 lb · Pólen (amarela, menor) 0,055 lb. A colmeia começa tombada: carregue a célula alta e ela vira quando superar a baixa em 0,44 lb (4 néctares).
                 </div>
             </div>
 
+            <!-- Lista das AprilTags visíveis pela câmera do robô (distância e desvio angular) -->
             <div class="card">
                 <h3>AprilTags (base da colmeia)</h3>
                 <div id="tg" style="font-size:12px;color:var(--mu)">Nenhuma tag visível</div>
             </div>
 
+            <!-- Registro de eventos (coleta, lançamento, tombamento...) -->
             <div class="card">
                 <h3>Eventos</h3>
                 <div id="log"></div>

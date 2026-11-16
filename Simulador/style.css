@@ -1,187 +1,280 @@
+/* =========================================================
+   VARIÁVEIS DE TEMA (modo claro por padrão)
+   bg = fundo da página | pn = painel | tx = texto
+   mu = texto secundário | bd = bordas | ac = cor de destaque
+   ok = verde de sucesso | cd = fundo dos cards
+   ========================================================= */
 :root {
-                --bg: #f4f4f5;
-                --pn: #fff;
-                --tx: #18181b;
-                --mu: #71717a;
-                --bd: #e4e4e7;
-                --ac: #dc2626;
-                --ok: #059669;
-                --cd: #f4f4f5;
-                box-sizing: border-box;
-                padding-top: env(safe-area-inset-top,0px);
-                padding-bottom: env(safe-area-inset-bottom,0px)
-            }
+    --bg: #f4f4f5;
+    --pn: #fff;
+    --tx: #18181b;
+    --mu: #71717a;
+    --bd: #e4e4e7;
+    --ac: #dc2626;
+    --ok: #059669;
+    --cd: #f4f4f5;
+    box-sizing: border-box;
+    /* Respeita as áreas seguras (notch / barra inferior) em celulares */
+    padding-top: env(safe-area-inset-top,0px);
+    padding-bottom: env(safe-area-inset-bottom,0px)
+}
 
-            @media(prefers-color-scheme: dark) {
-                :root:not([data-theme="light"]) {
-                    --bg:#09090b;
-                    --pn: #111114;
-                    --tx: #f4f4f5;
-                    --mu: #a1a1aa;
-                    --bd: #27272a;
-                    --ok: #34d399;
-                    --cd: #1a1a1f
-                }
-            }
+/* Tema escuro automático, a menos que o tema claro tenha sido forçado via data-theme="light" */
+@media(prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --bg:#09090b;
+        --pn: #111114;
+        --tx: #f4f4f5;
+        --mu: #a1a1aa;
+        --bd: #27272a;
+        --ok: #34d399;
+        --cd: #1a1a1f
+    }
+}
 
-            :root[data-theme="dark"] {
-                --bg: #09090b;
-                --pn: #111114;
-                --tx: #f4f4f5;
-                --mu: #a1a1aa;
-                --bd: #27272a;
-                --ok: #34d399;
-                --cd: #1a1a1f
-            }
+/* Tema escuro forçado manualmente via data-theme="dark" */
+:root[data-theme="dark"] {
+    --bg: #09090b;
+    --pn: #111114;
+    --tx: #f4f4f5;
+    --mu: #a1a1aa;
+    --bd: #27272a;
+    --ok: #34d399;
+    --cd: #1a1a1f
+}
 
-            html,body {
-                height: 100%;
-                margin: 0
-            }
+/* Ocupa a tela inteira, sem margens */
+html,body {
+    height: 100%;
+    margin: 0
+}
 
-            body {
-                display: flex;
-                background: var(--bg);
-                color: var(--tx);
-                font: 13px system-ui,-apple-system,"Segoe UI",sans-serif;
-                overflow: hidden
-            }
+/* Layout principal: visualização 3D à esquerda + painel lateral à direita */
+body {
+    display: flex;
+    background: var(--bg);
+    color: var(--tx);
+    font: 13px system-ui,-apple-system,"Segoe UI",sans-serif;
+    overflow: hidden
+}
 
-            #view {
-                flex: 1;
-                position: relative;
-                min-width: 0;
-                background: #09090b
-            }
+/* Área onde o canvas do Three.js é desenhado */
+#view {
+    flex: 1;             /* ocupa todo o espaço restante */
+    position: relative;  /* referência para HUDs e mini-câmera posicionados em absoluto */
+    min-width: 0;        /* permite encolher dentro do flex */
+    background: #09090b
+}
 
-            #view canvas {
-                display: block
-            }
+#view canvas {
+    display: block       /* remove o espaço extra abaixo do canvas */
+}
 
-            .hud {
-                position: absolute;
-                background: rgba(10,10,14,.78);
-                color: #f4f4f5;
-                border: 1px solid #3f3f46;
-                border-radius: 10px;
-                padding: 6px 10px;
-                font: 12px ui-monospace,Menlo,monospace
-            }
+/* Caixinhas de informação (HUD) sobre a cena 3D */
+.hud {
+    position: absolute;
+    background: rgba(10,10,14,.78);
+    color: #f4f4f5;
+    border: 1px solid #3f3f46;
+    border-radius: 10px;
+    padding: 6px 10px;
+    font: 12px ui-monospace,Menlo,monospace
+}
 
-            #panel {
-                width: 300px;
-                overflow: auto;
-                background: var(--pn);
-                border-left: 1px solid var(--bd);
-                padding: 10px
-            }
+/* Painel lateral de controles e telemetria */
+#panel {
+    width: 300px;
+    overflow: auto;
+    background: var(--pn);
+    border-left: 1px solid var(--bd);
+    padding: 10px
+}
 
-            .card {
-                background: var(--cd);
-                border: 1px solid var(--bd);
-                border-radius: 10px;
-                padding: 9px;
-                margin-bottom: 9px
-            }
+/* Cartão dentro do painel */
+.card {
+    background: var(--cd);
+    border: 1px solid var(--bd);
+    border-radius: 10px;
+    padding: 9px;
+    margin-bottom: 9px
+}
 
-            .card h3 {
-                margin: 0 0 6px;
-                font-size: 11px;
-                text-transform: uppercase;
-                letter-spacing: .06em;
-                color: var(--mu)
-            }
+/* Título do cartão (pequeno, maiúsculo e discreto) */
+.card h3 {
+    margin: 0 0 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--mu)
+}
 
-            .row {
-                display: flex;
-                justify-content: space-between;
-                gap: 6px;
-                align-items: center
-            }
+/* Linha flexível: itens nas pontas, alinhados ao centro */
+.row {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    align-items: center
+}
 
-            .slots {
-                display: grid;
-                grid-template-columns: repeat(4,1fr);
-                gap: 5px
-            }
+/* Grade de 4 slots do inventário do robô */
+.slots {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 5px
+}
 
-            .slot {
-                height: 30px;
-                border: 1px dashed var(--bd);
-                border-radius: 8px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 10px;
-                color: var(--mu)
-            }
+/* Slot vazio (borda tracejada) */
+.slot {
+    height: 30px;
+    border: 1px dashed var(--bd);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--mu)
+}
 
-            .bar {
-                height: 8px;
-                background: var(--bd);
-                border-radius: 4px;
-                overflow: hidden;
-                margin: 3px 0 7px
-            }
+/* Barra de progresso do peso nas células de carga */
+.bar {
+    height: 8px;
+    background: var(--bd);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 3px 0 7px
+}
 
-            .bar i {
-                display: block;
-                height: 100%;
-                background: #f59e0b;
-                width: 0
-            }
+/* Preenchimento da barra (a largura é definida pelo JS) */
+.bar i {
+    display: block;
+    height: 100%;
+    background: #f59e0b;
+    width: 0
+}
 
-            button {
-                font: 600 12px system-ui;
-                border: 1px solid var(--bd);
-                background: var(--pn);
-                color: var(--tx);
-                padding: 6px 9px;
-                border-radius: 8px;
-                cursor: pointer
-            }
+/* Botões */
+button {
+    font: 600 12px system-ui;
+    border: 1px solid var(--bd);
+    background: var(--pn);
+    color: var(--tx);
+    padding: 6px 9px;
+    border-radius: 8px;
+    cursor: pointer
+}
 
-            button:hover {
-                border-color: var(--ac)
-            }
+button:hover {
+    border-color: var(--ac)   /* destaque vermelho ao passar o mouse */
+}
 
-            #log {
-                height: 110px;
-                overflow: auto;
-                font: 11px ui-monospace,Menlo,monospace;
-                color: var(--mu)
-            }
+/* Log de eventos com rolagem */
+#log {
+    height: 110px;
+    overflow: auto;
+    font: 11px ui-monospace,Menlo,monospace;
+    color: var(--mu)
+}
 
-            #pipbox {
-                position: absolute;
-                right: 14px;
-                bottom: 14px;
-                width: 260px;
-                height: 195px;
-                border: 2px solid #dc2626;
-                border-radius: 10px;
-                pointer-events: none;
-                overflow: hidden
-            }
+/* Moldura da câmera do robô (picture-in-picture, canto inferior direito).
+   O vídeo em si é renderizado pelo WebGL com scissor; aqui só fica a borda. */
+#pipbox {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    width: 260px;
+    height: 195px;
+    border: 2px solid #dc2626;
+    border-radius: 10px;
+    pointer-events: none;   /* não bloqueia cliques/arrastos no canvas */
+    overflow: hidden
+}
 
-            #pipbox span {
-                position: absolute;
-                top: 3px;
-                left: 6px;
-                font: 700 10px system-ui;
-                color: #34d399;
-                text-shadow: 0 0 3px #000
-            }
+/* Rótulo "CÂMERA DO ROBÔ" */
+#pipbox span {
+    position: absolute;
+    top: 3px;
+    left: 6px;
+    font: 700 10px system-ui;
+    color: #34d399;
+    text-shadow: 0 0 3px #000
+}
 
-            @media(max-width: 800px) {
-                body {
-                    flex-direction:column
-                }
+/* Responsivo: em telas estreitas o painel vai para baixo da cena */
+@media(max-width: 800px) {
+    body {
+        flex-direction:column
+    }
 
-                #panel {
-                    width: auto;
-                    height: 38%;
-                    border-left: 0;
-                    border-top: 1px solid var(--bd)
-                }
-            }
+    #panel {
+        width: auto;
+        height: 38%;
+        border-left: 0;
+        border-top: 1px solid var(--bd)
+    }
+}
+
+/* =========================================================
+   MENU (sobreposto à cena 3D)
+   ========================================================= */
+
+/* Garante que o atributo [hidden] esconda mesmo elementos com display definido */
+[hidden] {
+    display: none !important
+}
+
+/* Fundo escurecido que cobre a cena 3D */
+#menu {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(9,9,11,.72);
+    backdrop-filter: blur(4px)
+}
+
+/* Cada tela do menu (principal, ajuda, pausa, fim) */
+.scr {
+    background: var(--pn);
+    color: var(--tx);
+    border: 1px solid var(--bd);
+    border-radius: 16px;
+    padding: 22px 26px;
+    width: min(380px, 88%);
+    max-height: 90%;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px
+}
+
+.scr h1, .scr h2 {
+    margin: 0;
+    text-align: center
+}
+
+.scr .sub {
+    margin: 0 0 6px;
+    text-align: center;
+    color: var(--mu)
+}
+
+/* Botões grandes do menu */
+button.big {
+    padding: 11px;
+    font-size: 14px
+}
+
+/* Texto de instruções */
+.help p {
+    margin: 0 0 8px;
+    line-height: 1.45
+}
+
+/* Linha de total na tela final */
+.row.total {
+    font-size: 18px;
+    border-top: 1px solid var(--bd);
+    padding-top: 8px
+}
