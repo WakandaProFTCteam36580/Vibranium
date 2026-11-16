@@ -25,36 +25,26 @@ public class AutoTags extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            // Atualiza os dados da câmara a cada ciclo
             tagWebCam.update();
 
-            // Lista das tags que realmente tens disponíveis para teste
-            int[] meusIds = {30, 31, 32, 33};
-            AprilTagDetection minhaTag = null;
-            int idEncontrado = -1;
+            // Tenta procurar QUALQUER tag entre 0 e 100 para teste
+            AprilTagDetection tagTeste = null;
+            int idEncontrado = -1; // Variável criada fora do 'for'
 
-            // Tenta encontrar qualquer uma das tags da vossa lista
-            for (int id : meusIds) {
-                minhaTag = tagWebCam.getTagBySpecificId(id);
-                if (minhaTag != null && minhaTag.ftcPose != null) {
-                    idEncontrado = id;
-                    break; // Encontrou uma válida, para o ciclo de procura
+            for (int id = 0; id <= 100; id++) {
+                tagTeste = tagWebCam.getTagBySpecificId(id);
+                if (tagTeste != null) {
+                    idEncontrado = id; // Salva o ID encontrado
+                    break;
                 }
             }
 
-            // Se encontrou alguma das tags, mostra os dados detalhados no Driver Hub
-            if (minhaTag != null && minhaTag.ftcPose != null) {
-                telemetry.addData("Status", "TAG ENCONTRADA!");
-                telemetry.addData("ID da Tag", idEncontrado);
-                telemetry.addData("Alcance (Range)", "%.2f cm/pol", minhaTag.ftcPose.range);
-                telemetry.addData("Bearing (Ângulo)", "%.2f deg", minhaTag.ftcPose.bearing);
-                telemetry.addData("Eixo X", "%.2f", minhaTag.ftcPose.x);
-                telemetry.addData("Eixo Y", "%.2f", minhaTag.ftcPose.y);
+            if (tagTeste != null) {
+                telemetry.addData("DETETOU TAG!", "ID lido: " + idEncontrado); // Usa a variável salva
+                telemetry.addData("Tem Pose (3D)?", (tagTeste.ftcPose != null) ? "SIM" : "NÃO (Falta calibração/tamanho)");
             } else {
-                telemetry.addData("Status", "A procurar pelas tags (30-33)...");
+                telemetry.addData("Estado", "Câmara ativa, mas 0 tags visíveis no ecrã.");
             }
-
-            // Envia tudo para o ecrã do Driver Hub
             telemetry.update();
         }
 
