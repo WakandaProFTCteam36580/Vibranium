@@ -13,10 +13,7 @@ public class AutoTags extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        // Inicializa a câmara passando o hardwareMap e a telemetria
         tagWebCam.init(hardwareMap, telemetry);
-
-        // Otimiza o envio de telemetria para o Driver Hub (evita lag e atualiza fluidamente)
         telemetry.setMsTransmissionInterval(50);
 
         telemetry.addData("Estado", "Pronto para iniciar");
@@ -24,27 +21,32 @@ public class AutoTags extends LinearOpMode {
 
         waitForStart();
 
+        int[] meusIds = {30, 31, 32, 33};
+
         while (opModeIsActive()) {
             tagWebCam.update();
 
-            // Tenta procurar QUALQUER tag entre 0 e 100 para teste
-            AprilTagDetection tagTeste = null;
-            int idEncontrado = -1; // Variável criada fora do 'for'
+            AprilTagDetection minhaTag = null;
+            int idEncontrado = -1;
 
-            for (int id = 0; id <= 100; id++) {
-                tagTeste = tagWebCam.getTagBySpecificId(id);
-                if (tagTeste != null) {
-                    idEncontrado = id; // Salva o ID encontrado
+            for (int id : meusIds) {
+                minhaTag = tagWebCam.getTagBySpecificId(id);
+                if (minhaTag != null) {
+                    idEncontrado = id;
                     break;
                 }
             }
 
-            if (tagTeste != null) {
-                telemetry.addData("DETETOU TAG!", "ID lido: " + idEncontrado); // Usa a variável salva
-                telemetry.addData("Tem Pose (3D)?", (tagTeste.ftcPose != null) ? "SIM" : "NÃO (Falta calibração/tamanho)");
+            if (minhaTag != null) {
+                telemetry.addData("SUCESSO! Tag ID", idEncontrado);
+                if (minhaTag.ftcPose != null) {
+                    telemetry.addData("Distância (X, Y)", "%.1f cm, %.1f cm", minhaTag.ftcPose.x, minhaTag.ftcPose.y);
+                    telemetry.addData("Ângulo (Yaw)", "%.1f graus", minhaTag.ftcPose.yaw);
+                }
             } else {
-                telemetry.addData("Estado", "Câmara ativa, mas 0 tags visíveis no ecrã.");
+                telemetry.addData("Estado", "A procurar pelas tags (30-33)...");
             }
+
             telemetry.update();
         }
 
