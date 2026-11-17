@@ -15,7 +15,7 @@ public class Teleoperado extends OpMode {
     //Nomeando as variáveis
     public DcMotor motor_dir; //Porta de motor 0 (312 RPM)
     public DcMotor motor_esq; //Porta de motor 1 (312 RPM)
-    public DcMotor motor_it; //Porta de motor 2 (117 RPM)
+    public DcMotor motor_it; //Porta de motor 2 (4 000 RPM)
     public DcMotor motor_sh; //Porta de motor 3 (6 000 RPM)
 
     public Servo servo_lift; //Porta de servos 0 (Speed)
