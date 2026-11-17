@@ -10,6 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagLibrary;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 
@@ -26,7 +27,17 @@ public class AprilTagWebCam {
     public void init(HardwareMap hwMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
+        // Regista explicitamente as tags 30, 31, 32 e 33 (tamanho padrão de 10 cm / 4 polegadas)
+        AprilTagLibrary minhaBiblioteca = new AprilTagLibrary.Builder()
+                .addTag(30, "Tag 30", 10.0, DistanceUnit.CM)
+                .addTag(31, "Tag 31", 10.0, DistanceUnit.CM)
+                .addTag(32, "Tag 32", 10.0, DistanceUnit.CM)
+                .addTag(33, "Tag 33", 10.0, DistanceUnit.CM)
+                .build();
+
         aprilTagProcessor = new AprilTagProcessor.Builder()
+                .setTagLibrary(minhaBiblioteca)
+                .setTagFamily(AprilTagProcessor.TagFamily.TAG_36h11)
                 .setDrawTagID(true)
                 .setDrawTagOutline(true)
                 .setDrawAxes(true)
@@ -52,7 +63,6 @@ public class AprilTagWebCam {
 
     public AprilTagDetection getTagBySpecificId(int id) {
         for (AprilTagDetection detection : detectedTags) {
-            // Verifica se a deteção é uma tag individual para poder ler o ID de forma segura
             if (detection instanceof AprilTagSingleDetection) {
                 AprilTagSingleDetection singleDet = (AprilTagSingleDetection) detection;
                 if (singleDet.id == id) {

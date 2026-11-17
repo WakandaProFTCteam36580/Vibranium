@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.drive.SampleTankDrive;
 
-@Autonomous(name = "Autonomo BioBuzz Giroscopio", group = "Autonomous")
+@Autonomous(name = "Autonomo BioBuzz", group = "Autonomous")
 public class AutonomoBioBuzz extends LinearOpMode {
 
     @Override
