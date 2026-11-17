@@ -25,6 +25,7 @@ public class Teleoperado extends OpMode {
 
     @Override
     public void init() {
+
         //IMPORTANDO AS VARIÁVEIS DOS SERVOS E DOS MOTORES
         motor_dir = hardwareMap.get(DcMotor.class, "motor_dir");
         motor_esq = hardwareMap.get(DcMotor.class, "motor_esq");
@@ -36,13 +37,15 @@ public class Teleoperado extends OpMode {
         motor_it.setDirection(DcMotorSimple.Direction.REVERSE);
         motor_sh.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        motor_it.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         //IMPORTANDO AS VARIÁVEIS DOS SERVOS
         servo_lift = hardwareMap.get(Servo.class, "servo_lift");
         servo_catraca = hardwareMap.get(Servo.class, "servo_catraca");
         servo_flw = hardwareMap.get(Servo.class,"servo_flw");
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS SERVOS
-        ((ServoImplEx) servo_lift).setPwmRange (new PwmControl.PwmRange(500,2500));
+        ((ServoImplEx)servo_lift).setPwmRange (new PwmControl.PwmRange(500,2500));
         ((ServoImplEx)servo_catraca).setPwmRange (new PwmControl.PwmRange (500,2500));
         ((ServoImplEx)servo_flw).setPwmRange (new PwmControl.PwmRange (500,2500));
 
@@ -124,7 +127,7 @@ public class Teleoperado extends OpMode {
 
         //CONTROLE DO SHOOTER
         if (gamepad2.right_bumper) {
-            motor_sh.setPower(0.63);
+            motor_sh.setPower(0.95);
             telemetry.addData("Shooter", "ativo");
         }
         else if (gamepad2.left_bumper) {
