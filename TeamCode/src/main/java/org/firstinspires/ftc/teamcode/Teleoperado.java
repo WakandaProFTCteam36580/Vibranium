@@ -156,7 +156,7 @@ public class Teleoperado extends OpMode {
 
         //CONFIGURANDO O SERVO DO LIFT
         if (gamepad2.x) {
-            servo_catraca.setPosition(1.0);
+            servo_lift.setPosition(1.0);
             telemetry.addData("Catraca", "em sentido HORÁRIO");
         }
         else if (gamepad2.y) {
