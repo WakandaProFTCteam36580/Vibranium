@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PwmControl;
@@ -18,7 +19,7 @@ public class Teleoperado extends OpMode {
     public DcMotor motor_it; //Porta de motor 2 (117 RPM)
     public DcMotor motor_sh; //Porta de motor 3 (6 000 RPM)
 
-    public Servo servo_lift; //Porta de servos 0 (Speed)
+    public CRServo servo_lift; //Porta de servos 0 (Speed)
     public Servo servo_catraca; //Porta de servo 1 (Speed)
     public Servo servo_flw; //Porta de servo 2 (Torque)
 
@@ -37,7 +38,7 @@ public class Teleoperado extends OpMode {
         motor_sh.setDirection(DcMotorSimple.Direction.REVERSE);
 
         //IMPORTANDO AS VARIÁVEIS DOS SERVOS
-        servo_lift = hardwareMap.get(Servo.class, "servo_lift");
+        servo_lift = hardwareMap.get(CRServo.class, "servo_lift");
         servo_catraca = hardwareMap.get(Servo.class, "servo_catraca");
         servo_flw = hardwareMap.get(Servo.class,"servo_flw");
 
@@ -47,7 +48,7 @@ public class Teleoperado extends OpMode {
         ((ServoImplEx)servo_flw).setPwmRange (new PwmControl.PwmRange (500,2500));
 
         //INVERTENDO SENTIDO DOS SERVOS
-        servo_lift.setDirection(Servo.Direction.REVERSE);
+        servo_lift.setDirection(CRServo.Direction.REVERSE);
         servo_catraca.setDirection(Servo.Direction.REVERSE);
 
         //MENSAGEM DE INICIALIZAÇÃO
