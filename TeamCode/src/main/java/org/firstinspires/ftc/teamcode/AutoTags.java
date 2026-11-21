@@ -6,36 +6,45 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.drive.AprilTagWebCam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
-@Autonomous(name="Teste AprilTags", group="Autonomous")
+@Autonomous(name="Teste Tags", group="Autonomous")
 public class AutoTags extends LinearOpMode {
 
     private AprilTagWebCam tagWebCam = new AprilTagWebCam();
 
     @Override
     public void runOpMode() {
-        // Inicializa a câmara passando o hardwareMap e a telemetria
         tagWebCam.init(hardwareMap, telemetry);
+        telemetry.setMsTransmissionInterval(50);
 
         telemetry.addData("Estado", "Pronto para iniciar");
         telemetry.update();
 
         waitForStart();
 
+        int[] meusIds = {30, 31, 32, 33};
+
         while (opModeIsActive()) {
-            // Atualiza os dados da câmara a cada ciclo
             tagWebCam.update();
 
-            // Procurar pela Tag pelo ID pretendido (ex: ID 20)
-            AprilTagDetection minhaTag = tagWebCam.getTagBySpecificId(20);
+            AprilTagDetection minhaTag = null;
+            int idEncontrado = -1;
 
-            if (minhaTag != null && minhaTag.ftcPose != null) {
-                telemetry.addData("Tag Encontrada!", "ID: 20");
-                telemetry.addData("Distância (X)", minhaTag.ftcPose.x);
-                telemetry.addData("Distância (Y)", minhaTag.ftcPose.y);
-                telemetry.addData("Distância (Range)", minhaTag.ftcPose.range);
-                telemetry.addData("Ângulo (Bearing)", minhaTag.ftcPose.bearing);
+            for (int id : meusIds) {
+                minhaTag = tagWebCam.getTagBySpecificId(id);
+                if (minhaTag != null) {
+                    idEncontrado = id;
+                    break;
+                }
+            }
+
+            if (minhaTag != null) {
+                telemetry.addData("SUCESSO! Tag ID", idEncontrado);
+                if (minhaTag.ftcPose != null) {
+                    telemetry.addData("Distância (X, Y)", "%.1f cm, %.1f cm", minhaTag.ftcPose.x, minhaTag.ftcPose.y);
+                    telemetry.addData("Ângulo (Yaw)", "%.1f graus", minhaTag.ftcPose.yaw);
+                }
             } else {
-                telemetry.addData("Estado", "A procurar por AprilTags...");
+                telemetry.addData("Estado", "A procurar pelas tags (30-33)...");
             }
 
             telemetry.update();
