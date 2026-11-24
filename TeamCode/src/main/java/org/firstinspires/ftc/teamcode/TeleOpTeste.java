@@ -14,7 +14,7 @@ public class TeleOpTeste extends OpMode {
     DcMotor motor_dir;
     DcMotor motor_esq;
     DcMotor motor_it;
-    CRServo servoit_dir;
+    CRServo servoit_dir;;
     CRServo servoit_esq;
 
     @Override
