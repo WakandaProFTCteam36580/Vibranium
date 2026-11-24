@@ -133,7 +133,7 @@ public class Teleoperado extends OpMode {
 
         //CONTROLE DO SHOOTER
         if (gamepad2.right_bumper) {
-            motor_sh.setPower(0.63);
+            motor_sh.setPower(0.97);
             telemetry.addData("Shooter", "ativo");
         }
         else if (gamepad2.left_bumper) {
