@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -174,7 +175,7 @@ public class AutonomoBioBuzz extends LinearOpMode {
         motorIt.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Mesmo range PWM e sentido dos servos do TeleOp
-        ((ServoImplEx) servoLift).setPwmRange(new PwmControl.PwmRange(500, 2500));
+        ((CRServoImplEx) servoLift).setPwmRange(new PwmControl.PwmRange(500, 2500));
         ((ServoImplEx) servoCatraca).setPwmRange(new PwmControl.PwmRange(500, 2500));
         ((ServoImplEx) servoFlw).setPwmRange(new PwmControl.PwmRange(500, 2500));
         servoLift.setDirection(CRServo.Direction.REVERSE);
