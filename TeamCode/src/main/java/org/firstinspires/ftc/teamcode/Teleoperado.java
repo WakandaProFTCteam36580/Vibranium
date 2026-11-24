@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PwmControl;
@@ -10,7 +11,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name = "TeleOpTeste")
+@TeleOp(name = "Teleoperado")
 public class Teleoperado extends OpMode {
 
     //---------------------
@@ -27,6 +28,18 @@ public class Teleoperado extends OpMode {
     public CRServo servo_lift; //Porta de servos 0 (Speed)
     public Servo servo_catraca; //Porta de servo 1 (Speed)
     public Servo servo_flw; //Porta de servo 2 (Torque)
+
+    //TEMPORIZADOR DO LIFT +
+    public ElapsedTime subir_lift = new ElapsedTime();
+    public boolean lift_subindo = false;
+    public double tempop_lift = 46.7; //TEMPO DE ATIVAÇÃO
+
+    //TEMPORIZADOR DO LIFT -
+    public ElapsedTime descer_lift = new ElapsedTime();
+    public boolean lift_descendo = false;
+    public double tempon_lift = 46.7; //TEMPO DE ATIVAÇÃO
+
+
 
 
     //TEMPORIZADOR DO LIFT
@@ -55,17 +68,22 @@ public class Teleoperado extends OpMode {
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS
         ((ServoImplEx) servo_lift).setPwmRange (new PwmControl.PwmRange(500,2500));
+        //EXPANDINDO O RANGE PWM PARA OS SERVOS
+        ((CRServoImplEx)servo_lift).setPwmRange (new PwmControl.PwmRange(500,2500));
         ((ServoImplEx)servo_catraca).setPwmRange (new PwmControl.PwmRange (500,2500));
         ((ServoImplEx)servo_flw).setPwmRange (new PwmControl.PwmRange (500,2500));
 
         //INVERTENDO SENTIDO DOS SERVOS
         servo_lift.setDirection(CRServo.Direction.REVERSE);
         servo_catraca.setDirection(Servo.Direction.REVERSE);
+        servo_lift.setDirection(CRServo.Direction.REVERSE);
 
         //MENSAGEM DE INICIALIZAÇÃO
         telemetry.addData("Modo teleoperado", "ativo!");
         telemetry.update();
     }
+
+
 
     @Override
     public void loop() {
@@ -90,15 +108,16 @@ public class Teleoperado extends OpMode {
 
         //CONFIGURAÇÃO INDIVIDUAL DOS MOTORES DE TRAÇÃO
         else {
+
             //CONTROLE DO MOTOR DE TRAÇÃO DIREITO EM -0.6
             if (gamepad1.b && gamepad1.right_bumper) {
                 motor_dir.setPower(-0.6);
-                telemetry.addData("Motor Direito", "em -0.6");
+                telemetry.addData("Motor Direito", "tá devagarzinho pra trás");
             }
             //CONTROLE DO MOTOR DE TRAÇÃO DIREITO EM +0.6
             else if (gamepad1.right_bumper) {
                 motor_dir.setPower(0.6);
-                telemetry.addData("Motor Direito", "em +0.6");
+                telemetry.addData("Motor Direito", "tá devagarzinho pra frente");
             }
             //CONTROLE DO MOTOR DE TRAÇÃO DIREITO NO ANALÓGICO
             else {
@@ -107,16 +126,17 @@ public class Teleoperado extends OpMode {
                 telemetry.addData("Potência Direita", potencia_dir);
             }
 
+
             //CONFIGURAÇÃO DO MOTOR ESQUERDO
             //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO EM -0.6
             if (gamepad1.b && gamepad1.left_bumper) {
                 motor_esq.setPower(-0.6);
-                telemetry.addData("Motor Esquerdo", "em -0.6");
+                telemetry.addData("Motor Esquerdo", "tá devagarzinho pra trás");
             }
             //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO EM +0.6
             else if (gamepad1.left_bumper) {
                 motor_esq.setPower(0.6);
-                telemetry.addData("Motor Esquerdo", "em +0.6");
+                telemetry.addData("Motor Esquerdo", "tá devagarzinho pra frente");
             }
             //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO NO ANALÓGICO
             else {
@@ -124,6 +144,7 @@ public class Teleoperado extends OpMode {
                 motor_esq.setPower(potencia_esq);
                 telemetry.addData("Potência Esquerda", potencia_esq);
             }
+
         }
 
 
@@ -133,25 +154,63 @@ public class Teleoperado extends OpMode {
 
         //CONTROLE DO SHOOTER
         if (gamepad2.right_bumper) {
-            motor_sh.setPower(0.97);
-            telemetry.addData("Shooter", "ativo");
-        }
-        else if (gamepad2.left_bumper) {
+            motor_sh.setPower(0.78);
+            telemetry.addData("Shooter", "em 78%");
+        } else if (gamepad2.left_bumper) {
             motor_sh.setPower(-0.07);
             telemetry.addData("Shooter", "parando");
-        }
-        else {
+        } else {
             motor_sh.setPower(0);
         }
+
+
+        //CONTROLE DO LIFT -
+        if (gamepad2.dpad_down && !lift_descendo) {
+            descer_lift.reset();
+            lift_descendo = true;
+            lift_subindo = false;
+            servo_lift.setPower(-1.0);
+        }
+        //VERIFICAÇÃO DE TEMPO
+        if (lift_descendo && descer_lift.seconds() >= tempon_lift) {
+            servo_lift.setPower(0.0);
+            lift_descendo = false;
+        }
+        //TELEMETRIA
+        if (lift_descendo) {
+            telemetry.addData("Lift", "descendo (tempo: " + String.format("%.1f", descer_lift.seconds()) + "s)");
+        } else {
+            telemetry.addData("Lift", "descansando");
+        }
+
+        //CONTROLE DO LIFT +
+        if (gamepad2.dpad_up && !lift_subindo) {
+            subir_lift.reset();
+            lift_subindo = true;
+            lift_descendo = false;
+            servo_lift.setPower(1.0);
+        }
+        //VERIFICAÇÃO DE TEMPO
+        if (lift_subindo && subir_lift.seconds() >= tempop_lift) {
+            servo_lift.setPower(0.0);
+            lift_subindo = false;
+        }
+        //TELEMETRIA
+        if (lift_subindo) {
+            telemetry.addData("Lift", "subindo (tempo: " + String.format("%.1f", subir_lift.seconds()) + "s)");
+        } else {
+            telemetry.addData("Lift", "descansando");
+        }
+
 
         //CONFIGURAÇÃO DO INTAKE
         if (gamepad2.a) {
             motor_it.setPower(1.0);
-            telemetry.addData("Intake", "ativo!");
+            telemetry.addData("Intake", "sugando tudo!");
         }
         else if (gamepad2.b) {
             motor_it.setPower(-1.0);
-            telemetry.addData("Intake", "negativamente ativo");
+            telemetry.addData("Intake", "cuspindo as esferas?!");
         }
         else {
             motor_it.setPower(0);
