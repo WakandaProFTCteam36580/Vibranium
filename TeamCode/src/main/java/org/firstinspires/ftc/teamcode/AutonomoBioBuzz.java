@@ -7,6 +7,9 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.PwmControl;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -41,7 +44,21 @@ public class AutonomoBioBuzz extends LinearOpMode {
     private static final double MS_POR_POLEGADA = 45.0;
     private static final double POTENCIA_RETA = 0.5;
     private static final double KP_HEADING = 0.02;   // correção para andar reto usando o IMU
+
+    // Shooter / lift / intake (valores do TeleOp)
+    private static final double POT_SHOOTER = 0.63;         // gamepad2.right_bumper
+    private static final double POT_SHOOTER_FREIO = -0.07;  // gamepad2.left_bumper ("parando")
+    private static final long SHOOTER_SPINUP_MS = 1000;     // CALIBRAR: tempo até o shooter pegar rotação
+    private static final long SHOOTER_FREIO_MS = 200;
+    private static final double POT_LIFT = 1.0;             // gamepad2.x
+    private static final long LIFT_MS = 2000;               // tempo_lift do TeleOp
+    private static final double POT_INTAKE = 1.0;           // gamepad2.a
     private static final long COLETA_FLOWER_MS = 1500;
+
+    // Servo da flower: o TeleOp não usa posições, então fica DESLIGADO até você medir.
+    private static final boolean USAR_SERVO_FLW = false;
+    private static final double FLW_POS_REPOUSO = 0.0;      // PREENCHER
+    private static final double FLW_POS_ATIVA = 1.0;        // PREENCHER
 
     // Câmara e AprilTags
     private final AprilTagWebCam tagWebCam = new AprilTagWebCam();
@@ -49,17 +66,23 @@ public class AutonomoBioBuzz extends LinearOpMode {
     private double anguloTagYaw = 0.0;
     private boolean leuAnguloValido = false;
 
-    // Motores de Tração e Lançamento/Coleta
-    private DcMotor motorDir;
-    private DcMotor motorEsq;
-    private DcMotor motorIt;
+    // Motores
+    private DcMotor motorDir;   // motor_dir
+    private DcMotor motorEsq;   // motor_esq
+    private DcMotor motorIt;    // motor_it (intake)
+    private DcMotor motorSh;    // motor_sh (shooter)
 
-    // Servos Contínuos de Alimentação/Coleta
-    private CRServo servoitDir;
-    private CRServo servoitEsq;
+    // Servos
+    private CRServo servoLift;      // servo_lift
+    private Servo servoCatraca;     // servo_catraca (sem uso na rotina por enquanto)
+    private Servo servoFlw;         // servo_flw (flower)
 
     // Giroscópio Interno (IMU)
     private IMU imu;
+
+    // Estado do shooter (liga durante o alinhamento para ganhar tempo)
+    private boolean shooterLigado = false;
+    private final ElapsedTime timerShooter = new ElapsedTime();
 
     // Navegação estimada (mesmo sistema de coordenadas do MeepMeep, já ajustado ao lado)
     private boolean lado2 = false;
@@ -103,7 +126,8 @@ public class AutonomoBioBuzz extends LinearOpMode {
             poseX = tx(START_X);
             poseY = ty(START_Y);
 
-            // 1. De frente para a colmeia: alinha e lança
+            // 1. De frente para a colmeia: alinha (shooter já esquentando) e lança
+            ligarShooter();
             alinharDeFrenteParaColmeia();
             tagWebCam.stop();
             lancarElementos();
@@ -133,17 +157,28 @@ public class AutonomoBioBuzz extends LinearOpMode {
         motorDir = hardwareMap.get(DcMotor.class, "motor_dir");
         motorEsq = hardwareMap.get(DcMotor.class, "motor_esq");
         motorIt = hardwareMap.get(DcMotor.class, "motor_it");
+        motorSh = hardwareMap.get(DcMotor.class, "motor_sh");
 
-        servoitDir = hardwareMap.get(CRServo.class, "servoit_dir");
-        servoitEsq = hardwareMap.get(CRServo.class, "servoit_esq");
+        servoLift = hardwareMap.get(CRServo.class, "servo_lift");
+        servoCatraca = hardwareMap.get(Servo.class, "servo_catraca");
+        servoFlw = hardwareMap.get(Servo.class, "servo_flw");
 
+        // Mesmos sentidos do TeleOp
         motorDir.setDirection(DcMotorSimple.Direction.REVERSE);
         motorEsq.setDirection(DcMotorSimple.Direction.FORWARD);
-        motorIt.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorIt.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorSh.setDirection(DcMotorSimple.Direction.REVERSE);
 
         motorDir.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorEsq.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorIt.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        // Mesmo range PWM e sentido dos servos do TeleOp
+        ((ServoImplEx) servoLift).setPwmRange(new PwmControl.PwmRange(500, 2500));
+        ((ServoImplEx) servoCatraca).setPwmRange(new PwmControl.PwmRange(500, 2500));
+        ((ServoImplEx) servoFlw).setPwmRange(new PwmControl.PwmRange(500, 2500));
+        servoLift.setDirection(CRServo.Direction.REVERSE);
+        servoCatraca.setDirection(Servo.Direction.REVERSE);
 
         imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters parametrosImu = new IMU.Parameters(
@@ -215,9 +250,11 @@ public class AutonomoBioBuzz extends LinearOpMode {
         fase("5 - Virando para a flower e pegando os polens");
 
         girarParaCampo(th(FLOWER_DEG));
+        if (USAR_SERVO_FLW) servoFlw.setPosition(FLW_POS_ATIVA);
         ativarColeta(true);
         sleep(COLETA_FLOWER_MS);
         ativarColeta(false);
+        if (USAR_SERVO_FLW) servoFlw.setPosition(FLW_POS_REPOUSO);
     }
 
     private void irParaEstacionamento() {
@@ -231,26 +268,44 @@ public class AutonomoBioBuzz extends LinearOpMode {
         telemetry.update();
     }
 
+    // =====================================================================
+    // Shooter / lift / intake
+    // =====================================================================
+
+    // Liga o shooter e marca o início do aquecimento (não faz nada se já estiver ligado)
+    private void ligarShooter() {
+        if (!shooterLigado) {
+            motorSh.setPower(POT_SHOOTER);
+            timerShooter.reset();
+            shooterLigado = true;
+        }
+    }
+
     private void lancarElementos() {
         telemetry.addData("Ação", "Lançando elementos");
         telemetry.update();
 
-        motorIt.setPower(0.8);
-        sleep(450);
+        ligarShooter();
 
-        servoitDir.setPower(1.0);
-        servoitEsq.setPower(1.0);
-        sleep(1600);
+        // Espera o shooter pegar rotação (parte desse tempo já passou durante o alinhamento)
+        while (opModeIsActive() && timerShooter.milliseconds() < SHOOTER_SPINUP_MS) {
+            idle();
+        }
 
-        servoitDir.setPower(0.0);
-        servoitEsq.setPower(0.0);
-        motorIt.setPower(0.0);
+        // Lift empurra os elementos para o shooter
+        servoLift.setPower(POT_LIFT);
+        sleep(LIFT_MS);
+        servoLift.setPower(0.0);
+
+        // Freia o shooter como no TeleOp (-0.07) e desliga
+        motorSh.setPower(POT_SHOOTER_FREIO);
+        sleep(SHOOTER_FREIO_MS);
+        motorSh.setPower(0.0);
+        shooterLigado = false;
     }
 
     private void ativarColeta(boolean ligar) {
-        double potenciaServo = ligar ? -0.8 : 0.0; // Ajuste o sinal conforme o sentido de recolher
-        servoitDir.setPower(potenciaServo);
-        servoitEsq.setPower(potenciaServo);
+        motorIt.setPower(ligar ? POT_INTAKE : 0.0);
     }
 
     private void fase(String texto) {
@@ -290,8 +345,10 @@ public class AutonomoBioBuzz extends LinearOpMode {
         andar(dist);
     }
 
-    // Aponta para a colmeia (heading do lado 1) já com a compensação do conjunto frontal
+    // Aponta para a colmeia (heading do lado 1) já com a compensação do conjunto frontal.
+    // Liga o shooter antes de girar para ele já ir esquentando.
     private void mirarColmeia(double degLado1) {
+        ligarShooter();
         girarParaCampo(th(degLado1) + COMPENSACAO_DESLOCAMENTO_GRAUS);
     }
 
@@ -319,7 +376,7 @@ public class AutonomoBioBuzz extends LinearOpMode {
                 motorEsq.setPower(potencia);
             }
         }
-        pararMotores();
+        pararMotoresTracao();
         sleep(100);
     }
 
@@ -370,21 +427,23 @@ public class AutonomoBioBuzz extends LinearOpMode {
                 motorEsq.setPower(potencia);
             }
         }
-        pararMotores();
+        pararMotoresTracao();
     }
 
-    // Para só a tração (mantém a coleta ligada, se estiver)
+    // Para só a tração (mantém shooter e intake como estão)
     private void pararMotoresTracao() {
         motorDir.setPower(0.0);
         motorEsq.setPower(0.0);
     }
 
+    // Para tudo
     private void pararMotores() {
         motorDir.setPower(0.0);
         motorEsq.setPower(0.0);
         motorIt.setPower(0.0);
-        servoitDir.setPower(0.0);
-        servoitEsq.setPower(0.0);
+        motorSh.setPower(0.0);
+        servoLift.setPower(0.0);
+        shooterLigado = false;
     }
 
     private double getAnguloAtual() {
