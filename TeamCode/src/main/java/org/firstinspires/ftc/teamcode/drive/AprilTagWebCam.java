@@ -27,12 +27,16 @@ public class AprilTagWebCam {
     public void init(HardwareMap hwMap, Telemetry telemetry) {
         this.telemetry = telemetry;
 
-        // Regista explicitamente as tags 30, 31, 32 e 33 (tamanho padrão de 10 cm / 4 polegadas)
+        // Regista todas as 8 tags do campo (30 a 33 e 34 a 37)
         AprilTagLibrary minhaBiblioteca = new AprilTagLibrary.Builder()
                 .addTag(30, "Tag 30", 10.0, DistanceUnit.CM)
                 .addTag(31, "Tag 31", 10.0, DistanceUnit.CM)
                 .addTag(32, "Tag 32", 10.0, DistanceUnit.CM)
                 .addTag(33, "Tag 33", 10.0, DistanceUnit.CM)
+                .addTag(34, "Tag 34", 10.0, DistanceUnit.CM)
+                .addTag(35, "Tag 35", 10.0, DistanceUnit.CM)
+                .addTag(36, "Tag 36", 10.0, DistanceUnit.CM)
+                .addTag(37, "Tag 37", 10.0, DistanceUnit.CM)
                 .build();
 
         aprilTagProcessor = new AprilTagProcessor.Builder()
@@ -61,13 +65,10 @@ public class AprilTagWebCam {
         return detectedTags;
     }
 
-    public AprilTagDetection getTagBySpecificId(int id) {
+    public AprilTagSingleDetection getFirstDetectedTag() {
         for (AprilTagDetection detection : detectedTags) {
             if (detection instanceof AprilTagSingleDetection) {
-                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) detection;
-                if (singleDet.id == id) {
-                    return detection;
-                }
+                return (AprilTagSingleDetection) detection;
             }
         }
         return null;
