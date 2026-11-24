@@ -16,11 +16,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.drive.AprilTagWebCam;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 
-<<<<<<< HEAD
-@Autonomous(name = "Autonomo BioBuzz", group = "Autonomous")
-=======
 @Autonomous(name = "Autonomo Principal BioBuzz", group = "Competition")
->>>>>>> b52ac4a29f9d1526f25d1fccaf555de6881edcda
 public class AutonomoBioBuzz extends LinearOpMode {
 
     // =====================================================================
