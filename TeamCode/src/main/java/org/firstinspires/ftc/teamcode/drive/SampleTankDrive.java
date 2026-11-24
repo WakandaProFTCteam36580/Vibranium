@@ -22,6 +22,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -87,8 +88,6 @@ public class SampleTankDrive extends TankDrive {
         motor_it = hardwareMap.get(DcMotorEx.class, "motor_it");
         motor_sh = hardwareMap.get(DcMotorEx.class, "motor_sh");
 
-        servoit_esq = hardwareMap.get(CRServo.class, "servoit_esq");
-        servoit_dir = hardwareMap.get(CRServo.class, "servoit_dir");
         servo_lift = hardwareMap.get(CRServo.class, "servo_lift");
 
         motor_it.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
