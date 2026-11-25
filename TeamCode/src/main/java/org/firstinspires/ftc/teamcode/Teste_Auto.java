@@ -33,7 +33,7 @@ public class Teste_Auto extends LinearOpMode {
     private static final double GIRO_PARA_COLETA_GRAUS = -90.0;
 
     // Distância maior para andar para frente por mais tempo capturando com o intake
-    private static final double DISTANCIA_COLETA_POLENS = 37.0;
+    private static final double DISTANCIA_COLETA_POLENS = 40.0;
 
     // Giro adicional para "encostar" melhor a frente/intake nos pólens ou na faixa de coleta
     private static final double AJUSTE_GIRO_ENCOSTAR_GRAUS = 15.0;

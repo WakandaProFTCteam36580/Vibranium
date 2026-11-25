@@ -67,8 +67,6 @@ public class Teleoperado extends OpMode {
         servo_flw = hardwareMap.get(Servo.class,"servo_flw");
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS
-        ((ServoImplEx) servo_lift).setPwmRange (new PwmControl.PwmRange(500,2500));
-        //EXPANDINDO O RANGE PWM PARA OS SERVOS
         ((CRServoImplEx)servo_lift).setPwmRange (new PwmControl.PwmRange(500,2500));
         ((ServoImplEx)servo_catraca).setPwmRange (new PwmControl.PwmRange (500,2500));
         ((ServoImplEx)servo_flw).setPwmRange (new PwmControl.PwmRange (500,2500));
@@ -76,7 +74,6 @@ public class Teleoperado extends OpMode {
         //INVERTENDO SENTIDO DOS SERVOS
         servo_lift.setDirection(CRServo.Direction.REVERSE);
         servo_catraca.setDirection(Servo.Direction.REVERSE);
-        servo_lift.setDirection(CRServo.Direction.REVERSE);
 
         //MENSAGEM DE INICIALIZAÇÃO
         telemetry.addData("Modo teleoperado", "ativo!");
@@ -85,8 +82,8 @@ public class Teleoperado extends OpMode {
 
 
 
-    @Override
-    public void loop() {
+        @Override
+        public void loop() {
 
         // ------------------------
         // GAMEPAD 1 - MOVIMENTAÇÃO
