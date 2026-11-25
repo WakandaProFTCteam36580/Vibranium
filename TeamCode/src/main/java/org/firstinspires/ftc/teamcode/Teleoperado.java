@@ -67,13 +67,14 @@ public class Teleoperado extends OpMode {
         servo_flw = hardwareMap.get(Servo.class,"servo_flw");
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS
-        ((CRServoImplEx)servo_lift).setPwmRange (new PwmControl.PwmRange(500,2500));
-        ((ServoImplEx)servo_catraca).setPwmRange (new PwmControl.PwmRange (500,2500));
-        ((ServoImplEx)servo_flw).setPwmRange (new PwmControl.PwmRange (500,2500));
+        ((CRServoImplEx)servo_lift).setPwmRange (new PwmControl.PwmRange(500,5000));
+        ((ServoImplEx)servo_catraca).setPwmRange (new PwmControl.PwmRange (500,5000));
+        ((ServoImplEx)servo_flw).setPwmRange (new PwmControl.PwmRange (500,5000));
 
         //INVERTENDO SENTIDO DOS SERVOS
         servo_lift.setDirection(CRServo.Direction.REVERSE);
         servo_catraca.setDirection(Servo.Direction.REVERSE);
+        servo_flw.setDirection(Servo.Direction.REVERSE);
 
         //MENSAGEM DE INICIALIZAÇÃO
         telemetry.addData("Modo teleoperado", "ativo!");
@@ -81,39 +82,47 @@ public class Teleoperado extends OpMode {
     }
 
 
-
-        @Override
-        public void loop() {
+    @Override
+    public void loop() {
 
         // ------------------------
         // GAMEPAD 1 - MOVIMENTAÇÃO
         // ------------------------
 
+        //-----------------------------------------
         //CONFIGURAÇÃO DOS MOTORES DE TRAÇÃO JUNTOS
+        //-----------------------------------------
+
         //CONTROLE DOS MOTORES DE TRAÇÃO POSITIVAMENTE
         if (gamepad1.a) {
-            motor_dir.setPower(1.0);
-            motor_esq.setPower(1.0);
+            motor_dir.setPower(0.85);
+            motor_esq.setPower(0.85);
             telemetry.addData("Vibranium", "tá voando!");
         }
         //CONTROLE DOS MOTORES DE TRAÇÃO NEGATIVAMENTE
         else if (gamepad1.y) {
-            motor_dir.setPower(-1.0);
-            motor_esq.setPower(-1.0);
+            motor_dir.setPower(-0.85);
+            motor_esq.setPower(-0.85);
             telemetry.addData("Vibranium", "tá dando ré");
         }
 
+        //---------------------------------------------
         //CONFIGURAÇÃO INDIVIDUAL DOS MOTORES DE TRAÇÃO
+        //---------------------------------------------
         else {
 
-            //CONTROLE DO MOTOR DE TRAÇÃO DIREITO EM -0.6
+            //-------------
+            //MOTOR DIREITO
+            //-------------
+
+            //CONTROLE DO MOTOR DE TRAÇÃO DIREITO EM -0.7
             if (gamepad1.b && gamepad1.right_bumper) {
-                motor_dir.setPower(-0.6);
+                motor_dir.setPower(-0.7);
                 telemetry.addData("Motor Direito", "tá devagarzinho pra trás");
             }
-            //CONTROLE DO MOTOR DE TRAÇÃO DIREITO EM +0.6
+            //CONTROLE DO MOTOR DE TRAÇÃO DIREITO EM +0.7
             else if (gamepad1.right_bumper) {
-                motor_dir.setPower(0.6);
+                motor_dir.setPower(0.7);
                 telemetry.addData("Motor Direito", "tá devagarzinho pra frente");
             }
             //CONTROLE DO MOTOR DE TRAÇÃO DIREITO NO ANALÓGICO
@@ -123,16 +132,18 @@ public class Teleoperado extends OpMode {
                 telemetry.addData("Potência Direita", potencia_dir);
             }
 
+            //--------------
+            //MOTOR ESQUERDO
+            //--------------
 
-            //CONFIGURAÇÃO DO MOTOR ESQUERDO
-            //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO EM -0.6
+            //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO EM -0.7
             if (gamepad1.b && gamepad1.left_bumper) {
-                motor_esq.setPower(-0.6);
+                motor_esq.setPower(-0.7);
                 telemetry.addData("Motor Esquerdo", "tá devagarzinho pra trás");
             }
-            //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO EM +0.6
+            //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO EM +0.7
             else if (gamepad1.left_bumper) {
-                motor_esq.setPower(0.6);
+                motor_esq.setPower(0.7);
                 telemetry.addData("Motor Esquerdo", "tá devagarzinho pra frente");
             }
             //CONTROLE DO MOTOR DE TRAÇÃO ESQUERDO NO ANALÓGICO
@@ -148,6 +159,7 @@ public class Teleoperado extends OpMode {
         // --------------------
         // GAMEPAD 2 - SISTEMAS
         // --------------------
+
 
         //CONTROLE DO SHOOTER
         if (gamepad2.right_bumper) {
@@ -176,65 +188,45 @@ public class Teleoperado extends OpMode {
         //TELEMETRIA
         if (lift_descendo) {
             telemetry.addData("Lift", "descendo (tempo: " + String.format("%.1f", descer_lift.seconds()) + "s)");
-        } else {
-            telemetry.addData("Lift", "descansando");
-        }
-
-        //CONTROLE DO LIFT +
-        if (gamepad2.dpad_up && !lift_subindo) {
-            subir_lift.reset();
-            lift_subindo = true;
-            lift_descendo = false;
-            servo_lift.setPower(1.0);
-        }
-        //VERIFICAÇÃO DE TEMPO
-        if (lift_subindo && subir_lift.seconds() >= tempop_lift) {
-            servo_lift.setPower(0.0);
-            lift_subindo = false;
-        }
-        //TELEMETRIA
-        if (lift_subindo) {
-            telemetry.addData("Lift", "subindo (tempo: " + String.format("%.1f", subir_lift.seconds()) + "s)");
-        } else {
-            telemetry.addData("Lift", "descansando");
-        }
 
 
-        //CONFIGURAÇÃO DO INTAKE
-        if (gamepad2.a) {
-            motor_it.setPower(1.0);
-            telemetry.addData("Intake", "sugando tudo!");
-        }
-        else if (gamepad2.b) {
-            motor_it.setPower(-1.0);
-            telemetry.addData("Intake", "cuspindo as esferas?!");
-        }
-        else {
-            motor_it.setPower(0);
-        }
-
-        // CONTROLE DO LIFT TEMPORIZADO (CRSERVO) - ADICIONADO
-        if (gamepad2.x && !lift_rodando) {
-            timer_lift.reset();
-            lift_rodando = true;
-            servo_lift.setPower(1.0);
-        }
-
-        // Verifica se o tempo limite já passou
-        if (lift_rodando && timer_lift.seconds() >= tempo_lift) {
-            servo_lift.setPower(0.0);
-            lift_rodando = false;
-        }
-
-        // Telemetria do Lift
-        if (lift_rodando) {
-            telemetry.addData("Lift", "Rodando (tempo: " + String.format("%.1f", timer_lift.seconds()) + "s)");
-        } else {
-            telemetry.addData("Lift", "Parado");
-        }
+            //CONTROLE DO LIFT +
+            if (gamepad2.dpad_up && !lift_subindo) {
+                subir_lift.reset();
+                lift_subindo = true;
+                lift_descendo = false;
+                servo_lift.setPower(1.0);
+            }
+            //VERIFICAÇÃO DE TEMPO
+            if (lift_subindo && subir_lift.seconds() >= tempop_lift) {
+                servo_lift.setPower(0.0);
+                lift_subindo = false;
+            }
+            //TELEMETRIA
+            if (lift_subindo) {
+                telemetry.addData("Lift", "subindo (tempo: " + String.format("%.1f", subir_lift.seconds()) + "s)");
+            }
+            //PARANDO O LIFT
+            if (gamepad2.x) {
+                lift_descendo = false;
+                lift_subindo = false;
+                servo_lift.setPower(0.0);
+            }
 
 
-        //Mensagem de atualização
-        telemetry.update();
+            //CONFIGURAÇÃO DO INTAKE
+            if (gamepad2.a) {
+                motor_it.setPower(1.0);
+                telemetry.addData("Intake", "sugando tudo!");
+            } else if (gamepad2.b) {
+                motor_it.setPower(-1.0);
+                telemetry.addData("Intake", "cuspindo as esferas?!");
+            } else {
+                motor_it.setPower(0);
+            }
+
+            //ATUALIZANDO TODAS AS TELEMETRIAS
+            telemetry.update();
+        }
     }
 }
