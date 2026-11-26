@@ -7,8 +7,6 @@ import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PwmControl;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "Teleoperado")
@@ -26,8 +24,9 @@ public class Teleoperado extends OpMode {
 
     //SERVOS
     public CRServo servo_lift; //Porta de servos 0 (Speed)
-    public Servo servo_catraca; //Porta de servo 1 (Speed)
-    public Servo servo_flw; //Porta de servo 2 (Torque)
+    public CRServo servo_catraca; //Porta de servo 1 (Speed)
+    public CRServo servo_flw; //Porta de servo 2 (Torque)
+
 
     //TEMPORIZADOR DO LIFT +
     public ElapsedTime subir_lift = new ElapsedTime();
@@ -39,13 +38,13 @@ public class Teleoperado extends OpMode {
     public boolean lift_descendo = false;
     public double tempon_lift = 46.7; //TEMPO DE ATIVAÇÃO
 
+    public ElapsedTime abrir_flower = new ElapsedTime();
+    public boolean flower_abrindo = false;
+    public double tempo_abrir_flower = 2.0; //TEMPO DE ATIVAÇÃO
 
-
-
-    //TEMPORIZADOR DO LIFT
-    public ElapsedTime timer_lift = new ElapsedTime();
-    public boolean lift_rodando = false;
-    public double tempo_lift = 2.0; //TEMPO DE ATIVAÇÃO
+    public ElapsedTime abrir_shooter = new ElapsedTime();
+    public boolean shooter_abrindo = false;
+    public double tempo_abrir_shooter = 2.0; //TEMPO DE ATIVAÇÃO
 
 
     @Override
@@ -63,18 +62,18 @@ public class Teleoperado extends OpMode {
 
         //IMPORTANDO AS VARIÁVEIS DOS SERVOS
         servo_lift = hardwareMap.get(CRServo.class, "servo_lift");
-        servo_catraca = hardwareMap.get(Servo.class, "servo_catraca");
-        servo_flw = hardwareMap.get(Servo.class,"servo_flw");
+        servo_catraca = hardwareMap.get(CRServo.class, "servo_catraca");
+        servo_flw = hardwareMap.get(CRServo.class, "servo_flw");
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS
-        ((CRServoImplEx)servo_lift).setPwmRange (new PwmControl.PwmRange(500,5000));
-        ((ServoImplEx)servo_catraca).setPwmRange (new PwmControl.PwmRange (500,5000));
-        ((ServoImplEx)servo_flw).setPwmRange (new PwmControl.PwmRange (500,5000));
+        ((CRServoImplEx) servo_lift).setPwmRange(new PwmControl.PwmRange(500, 5000));
+        ((CRServoImplEx) servo_catraca).setPwmRange(new PwmControl.PwmRange(500, 5000));
+        ((CRServoImplEx) servo_flw).setPwmRange(new PwmControl.PwmRange(500, 5000));
 
         //INVERTENDO SENTIDO DOS SERVOS
         servo_lift.setDirection(CRServo.Direction.REVERSE);
-        servo_catraca.setDirection(Servo.Direction.REVERSE);
-        servo_flw.setDirection(Servo.Direction.REVERSE);
+        servo_catraca.setDirection(CRServo.Direction.REVERSE);
+        servo_flw.setDirection(CRServo.Direction.REVERSE);
 
         //MENSAGEM DE INICIALIZAÇÃO
         telemetry.addData("Modo teleoperado", "ativo!");
@@ -172,61 +171,93 @@ public class Teleoperado extends OpMode {
             motor_sh.setPower(0);
         }
 
-
+        //=================================================================================================================================
         //CONTROLE DO LIFT -
         if (gamepad2.dpad_down && !lift_descendo) {
             descer_lift.reset();
             lift_descendo = true;
             lift_subindo = false;
             servo_lift.setPower(-1.0);
+
+            telemetry.addData("Lift", "descendo (tempo: " + String.format("%.1f", descer_lift.seconds()) + "s)");
         }
         //VERIFICAÇÃO DE TEMPO
         if (lift_descendo && descer_lift.seconds() >= tempon_lift) {
             servo_lift.setPower(0.0);
             lift_descendo = false;
         }
-        //TELEMETRIA
-        if (lift_descendo) {
-            telemetry.addData("Lift", "descendo (tempo: " + String.format("%.1f", descer_lift.seconds()) + "s)");
-
-
+        //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
             //CONTROLE DO LIFT +
-            if (gamepad2.dpad_up && !lift_subindo) {
-                subir_lift.reset();
-                lift_subindo = true;
-                lift_descendo = false;
-                servo_lift.setPower(1.0);
-            }
-            //VERIFICAÇÃO DE TEMPO
-            if (lift_subindo && subir_lift.seconds() >= tempop_lift) {
-                servo_lift.setPower(0.0);
-                lift_subindo = false;
-            }
-            //TELEMETRIA
-            if (lift_subindo) {
-                telemetry.addData("Lift", "subindo (tempo: " + String.format("%.1f", subir_lift.seconds()) + "s)");
-            }
-            //PARANDO O LIFT
-            if (gamepad2.x) {
-                lift_descendo = false;
-                lift_subindo = false;
-                servo_lift.setPower(0.0);
-            }
+        if (gamepad2.dpad_up && !lift_subindo) {
+            subir_lift.reset();
+            lift_subindo = true;
+            lift_descendo = false;
+            servo_lift.setPower(1.0);
 
-
-            //CONFIGURAÇÃO DO INTAKE
-            if (gamepad2.a) {
-                motor_it.setPower(1.0);
-                telemetry.addData("Intake", "sugando tudo!");
-            } else if (gamepad2.b) {
-                motor_it.setPower(-1.0);
-                telemetry.addData("Intake", "cuspindo as esferas?!");
-            } else {
-                motor_it.setPower(0);
-            }
-
-            //ATUALIZANDO TODAS AS TELEMETRIAS
-            telemetry.update();
+            telemetry.addData("Lift", "subindo (tempo: " + String.format("%.1f", subir_lift.seconds()) + "s)");
         }
+        //VERIFICAÇÃO DE TEMPO
+        if (lift_subindo && subir_lift.seconds() >= tempop_lift) {
+            servo_lift.setPower(0.0);
+            lift_subindo = false;
+        }
+
+        //PARANDO O LIFT
+        if (gamepad2.x) {
+            lift_descendo = false;
+            lift_subindo = false;
+            servo_lift.setPower(0.0);
+        }
+        //=================================================================================================================================
+
+
+        //==================================================================================================================================
+        //CONTROLE DA CATRACA PARA A FLOWER
+        if (gamepad2.right_stick_y <1.0 && !flower_abrindo) {
+            abrir_flower.reset();
+            flower_abrindo = true;
+            shooter_abrindo = false;
+            servo_catraca.setPower(-1.0);
+
+            telemetry.addData("catraca", "abrindo pra flower (tempo: " + String.format("%.1f", abrir_flower.seconds()) + "s)");
+        }
+        //VERIFICAÇÃO DE TEMPO
+        if (flower_abrindo && abrir_flower.seconds() >= tempo_abrir_flower) {
+            servo_catraca.setPower(0.0);
+            flower_abrindo = false;
+        }
+        //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+        //CONTROLE DA CATRACA PARA O SHOOTER
+        if (gamepad2.right_stick_y > 1.0 && !shooter_abrindo) {
+            abrir_shooter.reset();
+            shooter_abrindo = true;
+            flower_abrindo = false;
+            servo_catraca.setPower(1.0);
+
+            telemetry.addData("catraca", "abrindo pra shooter (tempo: " + String.format("%.1f", abrir_shooter.seconds()) + "s)");
+        }
+        //VERIFICAÇÃO DE TEMPO
+        if (shooter_abrindo && abrir_shooter.seconds() >= tempo_abrir_shooter) {
+            servo_catraca.setPower(0.0);
+            shooter_abrindo = false;
+        }
+        //==================================================================================================================================
+
+
+        //CONFIGURAÇÃO DO INTAKE
+        if (gamepad2.a) {
+            motor_it.setPower(1.0);
+
+            telemetry.addData("Intake", "sugando tudo!");
+        } else if (gamepad2.b) {
+            motor_it.setPower(-1.0);
+
+            telemetry.addData("Intake", "cuspindo as esferas?!");
+        } else {
+            motor_it.setPower(0);
+        }
+
+        //ATUALIZANDO TODAS AS TELEMETRIAS
+        telemetry.update();
     }
 }
