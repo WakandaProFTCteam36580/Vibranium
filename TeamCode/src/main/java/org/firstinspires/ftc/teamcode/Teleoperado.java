@@ -19,13 +19,14 @@ public class Teleoperado extends OpMode {
     //MOTORES
     public DcMotor motor_dir; //Porta de motor 0 (312 RPM)
     public DcMotor motor_esq; //Porta de motor 1 (312 RPM)
-    public DcMotor motor_it; //Porta de motor 2 (117 RPM)
+    public DcMotor motor_it; //Porta de motor 2 (+/- 4 000 RPM)
     public DcMotor motor_sh; //Porta de motor 3 (6 000 RPM)
 
     //SERVOS
     public CRServo servo_lift; //Porta de servos 0 (Speed)
     public CRServo servo_catraca; //Porta de servo 1 (Speed)
     public CRServo servo_flw; //Porta de servo 2 (Torque)
+
 
 
     //TEMPORIZADOR DO LIFT +
@@ -38,10 +39,15 @@ public class Teleoperado extends OpMode {
     public boolean lift_descendo = false;
     public double tempon_lift = 46.7; //TEMPO DE ATIVAÇÃO
 
+
+
+
+    //TEMPORIZADOR DA CATRACA PARA A FLOWER
     public ElapsedTime abrir_flower = new ElapsedTime();
     public boolean flower_abrindo = false;
     public double tempo_abrir_flower = 2.0; //TEMPO DE ATIVAÇÃO
 
+    //TEMPORIZADOR DA CATRACA PARA O SHOOTER
     public ElapsedTime abrir_shooter = new ElapsedTime();
     public boolean shooter_abrindo = false;
     public double tempo_abrir_shooter = 2.0; //TEMPO DE ATIVAÇÃO
@@ -66,9 +72,9 @@ public class Teleoperado extends OpMode {
         servo_flw = hardwareMap.get(CRServo.class, "servo_flw");
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS
-        ((CRServoImplEx) servo_lift).setPwmRange(new PwmControl.PwmRange(500, 5000));
-        ((CRServoImplEx) servo_catraca).setPwmRange(new PwmControl.PwmRange(500, 5000));
-        ((CRServoImplEx) servo_flw).setPwmRange(new PwmControl.PwmRange(500, 5000));
+        ((CRServoImplEx) servo_lift).setPwmRange(new PwmControl.PwmRange(500, 2500));
+        ((CRServoImplEx) servo_catraca).setPwmRange(new PwmControl.PwmRange(500, 2500));
+        ((CRServoImplEx) servo_flw).setPwmRange(new PwmControl.PwmRange(500, 2500));
 
         //INVERTENDO SENTIDO DOS SERVOS
         servo_lift.setDirection(CRServo.Direction.REVERSE);
@@ -76,7 +82,7 @@ public class Teleoperado extends OpMode {
         servo_flw.setDirection(CRServo.Direction.REVERSE);
 
         //MENSAGEM DE INICIALIZAÇÃO
-        telemetry.addData("Modo teleoperado", "ativo!");
+        telemetry.addData("Vibranium", "pronto para arrasar!");
         telemetry.update();
     }
 
@@ -186,7 +192,7 @@ public class Teleoperado extends OpMode {
             servo_lift.setPower(0.0);
             lift_descendo = false;
         }
-        //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+        //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
             //CONTROLE DO LIFT +
         if (gamepad2.dpad_up && !lift_subindo) {
             subir_lift.reset();
@@ -208,10 +214,10 @@ public class Teleoperado extends OpMode {
             lift_subindo = false;
             servo_lift.setPower(0.0);
         }
-        //=================================================================================================================================
+        //====================================================================================================================================
 
 
-        //==================================================================================================================================
+        //====================================================================================================================================
         //CONTROLE DA CATRACA PARA A FLOWER
         if (gamepad2.right_stick_y <1.0 && !flower_abrindo) {
             abrir_flower.reset();
@@ -241,7 +247,7 @@ public class Teleoperado extends OpMode {
             servo_catraca.setPower(0.0);
             shooter_abrindo = false;
         }
-        //==================================================================================================================================
+        //=====================================================================================================================================
 
 
         //CONFIGURAÇÃO DO INTAKE
