@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.CRServoImplEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PwmControl;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "Teleoperado")
@@ -24,7 +26,7 @@ public class Teleoperado extends OpMode {
 
     //SERVOS
     public CRServo servo_lift; //Porta de servos 0 (Speed)
-    public CRServo servo_catraca; //Porta de servo 1 (Speed)
+    public Servo servo_catraca; //Porta de servo 1 (Speed)
     public CRServo servo_flw; //Porta de servo 2 (Torque)
 
 
@@ -68,17 +70,16 @@ public class Teleoperado extends OpMode {
 
         //IMPORTANDO AS VARIÁVEIS DOS SERVOS
         servo_lift = hardwareMap.get(CRServo.class, "servo_lift");
-        servo_catraca = hardwareMap.get(CRServo.class, "servo_catraca");
+        servo_catraca = hardwareMap.get(Servo.class, "servo_catraca");
         servo_flw = hardwareMap.get(CRServo.class, "servo_flw");
 
         //EXPANDINDO O RANGE PWM PARA OS SERVOS
         ((CRServoImplEx) servo_lift).setPwmRange(new PwmControl.PwmRange(500, 2500));
-        ((CRServoImplEx) servo_catraca).setPwmRange(new PwmControl.PwmRange(500, 2500));
+        ((ServoImplEx) servo_catraca).setPwmRange(new PwmControl.PwmRange(500, 2500));
         ((CRServoImplEx) servo_flw).setPwmRange(new PwmControl.PwmRange(500, 2500));
 
         //INVERTENDO SENTIDO DOS SERVOS
         servo_lift.setDirection(CRServo.Direction.REVERSE);
-        servo_catraca.setDirection(CRServo.Direction.REVERSE);
         servo_flw.setDirection(CRServo.Direction.REVERSE);
 
         //MENSAGEM DE INICIALIZAÇÃO
@@ -218,43 +219,15 @@ public class Teleoperado extends OpMode {
         }
         //====================================================================================================================================
 
-
         //====================================================================================================================================
-        //CONTROLE DA CATRACA PARA A FLOWER
-        if (gamepad2.dpad_left && !flower_abrindo) {
-            abrir_flower.reset();
-            flower_abrindo = true;
-            shooter_abrindo = false;
-            servo_catraca.setPower(-1.0);
+        //PROGRAMANDO A PORTA DO ARMAZENADOR
+        if (gamepad1.dpad_up) {
+            servo_catraca.setPosition(0.42); //Em pé
         }
-        //VERIFICAÇÃO DE TEMPO
-        if (flower_abrindo && abrir_flower.seconds() >= tempo_abrir_flower) {
-            servo_catraca.setPower(0.0);
-            flower_abrindo = false;
+        else if (gamepad1.dpad_right) {
+            servo_catraca.setPosition(0.75); //Deitado
         }
-        if (flower_abrindo){
-            telemetry.addData("catraca", "abrindo pra flower (tempo: " + String.format("%.1f", abrir_flower.seconds()) + "s)");
-        }
-
-        //::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-        //CONTROLE DA CATRACA PARA O SHOOTER
-        if (gamepad2.dpad_right && !shooter_abrindo) {
-            abrir_shooter.reset();
-            shooter_abrindo = true;
-            flower_abrindo = false;
-            servo_catraca.setPower(1.0);
-        }
-        //VERIFICAÇÃO DE TEMPO
-        if (shooter_abrindo && abrir_shooter.seconds() >= tempo_abrir_shooter) {
-            servo_catraca.setPower(0.0);
-            shooter_abrindo = false;
-        }
-        if (shooter_abrindo){
-            telemetry.addData("catraca", "abrindo pra shooter (tempo: " + String.format("%.1f", abrir_shooter.seconds()) + "s)");
-        }
-        //=====================================================================================================================================
-
+        //====================================================================================================================================
 
         //CONFIGURAÇÃO DO INTAKE
         if (gamepad2.a) {
